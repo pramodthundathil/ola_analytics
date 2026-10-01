@@ -1,0 +1,43 @@
+# Environment & Secret Configuration
+.env
+.env.*
+!.env.example
+*.env
+
+# SQLite & Database Files
+*.sqlite3
+*.db
+*.sqlite
+db.sqlite3
+erp_readonly.sqlite3
+
+# Python Caches & Compiled Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & Runtime Files
+*.log
+*.sqlite3-journal
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# OS & Editor Metadata
+.DS_Store
+.vscode/
+.idea/
+.gemini/
+*.swp
+*.swo
+
+# Static & Media Assets
+/static/
+/staticfiles/
+/media/
