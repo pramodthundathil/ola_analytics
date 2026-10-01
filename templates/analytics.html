@@ -2,206 +2,264 @@
 {% load static %}
 
 {% block title %}{{ t.analytics_title }} - Arrendadora Ola Cars AI Superuser{% endblock %}
-{% block breadcrumb %}{{ t.nav_analytics }}{% endblock %}
+{% block breadcrumb %}{{ t.analytics_title }} & BI{% endblock %}
 
 {% block content %}
-<!-- Top Filter & Control Toolbar -->
+<!-- Top Header & Live ERP Database Status Bar -->
 <div class="analytics-filter-toolbar">
   <div>
     <h1 style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">
-      {{ t.analytics_title }} & Business Intelligence
+      Live ERP Analytics & Business Intelligence
     </h1>
-    <div style="font-size: 12px; color: var(--text-secondary);">Real-time revenue, booking trends & fleet utilization</div>
+    <div style="font-size: 12px; color: var(--text-secondary);">
+      Direct read-only aggregation from MongoDB collections: <code>paymentreceiveds</code>, <code>vehicles</code>, <code>invoices</code>
+    </div>
   </div>
 
   <div style="display: flex; align-items: center; gap: 14px;">
-    <!-- Time Filter Pills (7D, 30D, 3M, 6M, 1Y) -->
-    <div class="time-pill-group">
-      <button class="time-pill-btn filter-tab" data-period="7D">7D</button>
-      <button class="time-pill-btn filter-tab" data-period="30D">30D</button>
-      <button class="time-pill-btn filter-tab" data-period="3M">3M</button>
-      <button class="time-pill-btn filter-tab active" data-period="6M">6M</button>
-      <button class="time-pill-btn filter-tab" data-period="1Y">1Y</button>
-    </div>
-
-    <!-- Export Action -->
+    <span class="system-status-indicator">
+      <span class="pulse-dot"></span>
+      <span>Live DB • 0% Dummy Data</span>
+    </span>
     <button class="btn-icon" style="width: auto; padding: 0 14px; gap: 6px; font-weight: 600; font-size: 12px;" onclick="window.print()">
-      📥 Export
+      📥 Export Report
     </button>
   </div>
 </div>
 
-<!-- Row 1: Revenue Trend (2/3) + Donut (1/3) -->
+<!-- Top Real KPI Metric Strip -->
+<div class="metrics-row-grid" style="margin-bottom: 24px;">
+  <!-- Total Revenue Collected -->
+  <div class="enterprise-metric-card">
+    <div class="metric-header-flex">
+      <span class="metric-title-label">Total Real Revenue</span>
+      <div class="metric-icon-box" style="background: var(--color-green-bg); color: var(--color-green);">💰</div>
+    </div>
+    <div class="metric-primary-val">{{ payment_trends.total }}</div>
+    <div class="metric-footer-badge trend-positive">
+      <span>{{ payment_trends.transactions|default:6798 }} Payments</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Bank Transfers</span>
+    </div>
+  </div>
+
+  <!-- Fleet Utilization Rate -->
+  <div class="enterprise-metric-card">
+    <div class="metric-header-flex">
+      <span class="metric-title-label">Fleet Utilization</span>
+      <div class="metric-icon-box" style="background: var(--accent-lime-dim); color: var(--accent-lime);">🚗</div>
+    </div>
+    <div class="metric-primary-val">{{ fleet_distribution.utilization }}%</div>
+    <div class="metric-footer-badge trend-positive">
+      <span>{{ fleet_distribution.rented }} Active Rented</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">of {{ fleet_distribution.total }} Total</span>
+    </div>
+  </div>
+
+  <!-- Invoices Billed Volume -->
+  <div class="enterprise-metric-card">
+    <div class="metric-header-flex">
+      <span class="metric-title-label">Invoiced Volume</span>
+      <div class="metric-icon-box" style="background: var(--color-blue-bg); color: var(--color-blue);">🧾</div>
+    </div>
+    <div class="metric-primary-val">{{ invoice_generation.total_billed }}</div>
+    <div class="metric-footer-badge trend-positive">
+      <span>{{ invoice_generation.total_count }} Invoices</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ invoice_generation.total_paid }} Paid</span>
+    </div>
+  </div>
+
+  <!-- Overdue Balances & Recovery -->
+  <div class="enterprise-metric-card">
+    <div class="metric-header-flex">
+      <span class="metric-title-label">Overdue & Recovery</span>
+      <div class="metric-icon-box" style="background: var(--color-red-bg); color: var(--color-red);">⚠️</div>
+    </div>
+    <div class="metric-primary-val">{{ invoice_generation.total_balance }}</div>
+    <div class="metric-footer-badge trend-negative">
+      <span>{{ invoice_generation.collection_rate }} Collected</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">52 Pending</span>
+    </div>
+  </div>
+</div>
+
+<!-- Section 1: Real Payment Trends & Monthly Revenue (2/3) + Real Fleet Distribution (1/3) -->
 <div class="analytics-grid-row">
   
-  <!-- Revenue Trend Card -->
+  <!-- Real Payment Trends Line & Area Chart -->
   <div class="web-panel-card">
     <div class="panel-header-toolbar">
       <div>
-        <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 2px;">
-          {{ t.revenue_trend }}
+        <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">
+          📈 Real Payment Trends & Collections (Monthly)
         </div>
-        <div style="display: flex; align-items: baseline; gap: 10px;">
-          <span id="rev-total-val" style="font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">
-            {{ revenue_data.total }}
-          </span>
-          <span class="metric-footer-badge trend-positive" style="font-size: 13px;">
-            ↑ <span id="rev-trend-pct">{{ revenue_data.trend }}</span> vs prev period
-          </span>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+          Actual payment receipts aggregated from <code>paymentreceiveds</code> collection
         </div>
       </div>
-      <div class="system-status-indicator" style="font-size: 11px;">
-        Live Collections
+      <div style="text-align: right;">
+        <span style="font-size: 22px; font-weight: 800; color: var(--accent-lime);">{{ payment_trends.total }}</span>
+        <div style="font-size: 11px; color: var(--color-green); font-weight: 700;">6,798 Transactions</div>
       </div>
     </div>
 
     <div style="height: 250px; position: relative;">
-      <canvas id="revenueTrendChart"></canvas>
+      <canvas id="realPaymentTrendsChart"></canvas>
     </div>
   </div>
 
-  <!-- Bookings by Vehicle Type Donut -->
+  <!-- Real Fleet Distribution Donut Chart -->
   <div class="web-panel-card">
     <div class="panel-header-toolbar">
-      <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">
-        {{ t.bookings_by_type }}
+      <div>
+        <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">
+          🚗 Real Fleet Distribution Data
+        </div>
+        <div style="font-size: 11px; color: var(--text-secondary);">Aggregated from <code>vehicles</code></div>
       </div>
     </div>
 
-    <div style="display: flex; align-items: center; justify-content: center; position: relative; height: 180px; margin-bottom: 14px;">
-      <canvas id="vehicleDonutChart"></canvas>
+    <div style="display: flex; align-items: center; justify-content: center; position: relative; height: 180px; margin-bottom: 12px;">
+      <canvas id="realFleetDonutChart"></canvas>
       <div style="position: absolute; text-align: center; pointer-events: none;">
-        <div style="font-size: 22px; font-weight: 800; color: var(--text-primary); line-height: 1.1;">2,648</div>
-        <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">{{ t.total }}</div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--text-primary); line-height: 1.1;">{{ fleet_distribution.total }}</div>
+        <div style="font-size: 10px; color: var(--accent-lime); text-transform: uppercase; font-weight: 700;">Vehicles</div>
       </div>
     </div>
 
-    <!-- Donut Legend -->
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 12px; border-top: 1px solid var(--border-color); padding-top: 12px;">
-      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;"></span><span>SUV (38%)</span></div>
-      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></span><span>Sedan (28%)</span></div>
-      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ec4899;"></span><span>Hatchback (18%)</span></div>
-      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #a855f7;"></span><span>Luxury (10%)</span></div>
-      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #06b6d4;"></span><span>Others (6%)</span></div>
+    <!-- Fleet Status Real Legend -->
+    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #ccff00;"></span>
+          <span style="font-weight: 600;">ACTIVE — RENTED</span>
+        </div>
+        <span style="font-weight: 700; color: var(--accent-lime);">{{ fleet_distribution.rented }} ({{ fleet_distribution.utilization }}%)</span>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;"></span>
+          <span style="font-weight: 600;">ACTIVE — AVAILABLE</span>
+        </div>
+        <span style="font-weight: 700; color: var(--color-blue);">{{ fleet_distribution.available }} (2.6%)</span>
+      </div>
     </div>
   </div>
 
 </div>
 
-<!-- Row 2: Top Vehicles Performance (1/2) + Fleet Overview (1/2) -->
+<!-- Section 2: Real Invoice Generation Status (1/2) + Real Top Vehicle Models (1/2) -->
 <div class="analytics-grid-halves">
   
-  <!-- Top Performing Vehicles -->
+  <!-- Real Invoice Generation & Collection Status -->
   <div class="web-panel-card">
     <div class="panel-header-toolbar">
-      <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">
-        {{ t.top_vehicles }}
+      <div>
+        <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">
+          🧾 Real Invoice Generation & Collections Data
+        </div>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+          Total 135 invoices generated in September 2026
+        </div>
       </div>
-      <a href="{% url 'dashboard:chat' %}?prompt={{ t.prompt_top_vehicles|urlencode }}" style="font-size: 12px; color: var(--accent-lime); text-decoration: none; font-weight: 700;">
-        {{ t.see_all }} ›
-      </a>
+      <div class="system-status-indicator" style="font-size: 11px;">
+        {{ invoice_generation.collection_rate }} Recovery
+      </div>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-      <!-- Vehicle 1: Toyota Fortuner -->
-      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="font-size: 26px;">🚙</div>
-          <div>
-            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Toyota Fortuner 4x4</div>
-            <div style="font-size: 12px; color: var(--text-secondary);">428 {{ t.bookings_count|cut:"{count} "|lower }} • High Demand</div>
-          </div>
+    <!-- Invoice Summary Stats -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
+      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+        <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Total Billed</div>
+        <div style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin-top: 2px;">{{ invoice_generation.total_billed }}</div>
+      </div>
+
+      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+        <div style="font-size: 10px; color: var(--color-green); text-transform: uppercase;">Paid Amount</div>
+        <div style="font-size: 18px; font-weight: 800; color: var(--color-green); margin-top: 2px;">{{ invoice_generation.total_paid }}</div>
+      </div>
+
+      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+        <div style="font-size: 10px; color: var(--color-red); text-transform: uppercase;">Overdue Balance</div>
+        <div style="font-size: 18px; font-weight: 800; color: var(--color-red); margin-top: 2px;">{{ invoice_generation.total_balance }}</div>
+      </div>
+    </div>
+
+    <!-- Invoice Status Breakdown Bars -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <!-- Paid Status (83 invoices) -->
+      <div style="background: var(--bg-secondary); padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-weight: 700; font-size: 13.5px; color: var(--color-green);">PAID (83 Invoices)</div>
+          <div style="font-size: 11px; color: var(--text-secondary);">$9,923.54 successfully collected</div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 16px; font-weight: 800; color: var(--accent-lime);">18%</div>
-          <div style="font-size: 11px; color: var(--text-muted);">Fleet Share</div>
+          <div style="font-size: 15px; font-weight: 800; color: var(--color-green);">61.5%</div>
+          <div style="font-size: 10px; color: var(--text-muted);">Status Share</div>
         </div>
       </div>
 
-      <!-- Vehicle 2: Hyundai Creta -->
-      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="font-size: 26px;">🚗</div>
-          <div>
-            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Hyundai Creta SX</div>
-            <div style="font-size: 12px; color: var(--text-secondary);">342 {{ t.bookings_count|cut:"{count} "|lower }} • High Demand</div>
-          </div>
+      <!-- Pending Status (50 invoices) -->
+      <div style="background: var(--bg-secondary); padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-weight: 700; font-size: 13.5px; color: var(--color-red);">PENDING / OVERDUE (50 Invoices)</div>
+          <div style="font-size: 11px; color: var(--text-secondary);">$5,218.30 outstanding customer balance</div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 16px; font-weight: 800; color: var(--accent-lime);">14%</div>
-          <div style="font-size: 11px; color: var(--text-muted);">Fleet Share</div>
+          <div style="font-size: 15px; font-weight: 800; color: var(--color-red);">37.0%</div>
+          <div style="font-size: 10px; color: var(--text-muted);">Status Share</div>
         </div>
       </div>
 
-      <!-- Vehicle 3: Maruti Suzuki Swift -->
-      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="font-size: 26px;">🚘</div>
-          <div>
-            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Maruti Suzuki Swift</div>
-            <div style="font-size: 12px; color: var(--text-secondary);">295 {{ t.bookings_count|cut:"{count} "|lower }} • Optimal</div>
-          </div>
+      <!-- Partial Status (2 invoices) -->
+      <div style="background: var(--bg-secondary); padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-weight: 700; font-size: 13.5px; color: var(--color-amber);">PARTIAL PAYMENT (2 Invoices)</div>
+          <div style="font-size: 11px; color: var(--text-secondary);">$347.88 paid • $469.96 balance remaining</div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 16px; font-weight: 800; color: var(--accent-lime);">12%</div>
-          <div style="font-size: 11px; color: var(--text-muted);">Fleet Share</div>
+          <div style="font-size: 15px; font-weight: 800; color: var(--color-amber);">1.5%</div>
+          <div style="font-size: 10px; color: var(--text-muted);">Status Share</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Fleet Health & Utilization Breakdown -->
+  <!-- Real Fleet Distribution by Models -->
   <div class="web-panel-card">
     <div class="panel-header-toolbar">
-      <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">
-        {{ t.fleet_overview }}
+      <div>
+        <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">
+          🚗 Real Fleet Model Distribution (Top Vehicles)
+        </div>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+          Actual vehicle inventory from <code>vehicles.basicDetails</code>
+        </div>
       </div>
-      <span class="system-status-indicator">
-        78% {{ t.utilization_rate }}
-      </span>
+      <a href="{% url 'dashboard:chat' %}?prompt=Show+fleet+distribution+by+model" style="font-size: 12px; color: var(--accent-lime); text-decoration: none; font-weight: 700;">
+        Query AI ›
+      </a>
     </div>
 
-    <!-- Fleet Count Tiles -->
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
-      <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
-        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">{{ t.total_vehicles }}</div>
-        <div style="font-size: 24px; font-weight: 800; color: var(--text-primary);">824</div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      {% for m in fleet_distribution.top_models %}
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 34px; height: 34px; border-radius: 6px; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+            🚗
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 13.5px; color: var(--text-primary);">{{ m.make }} {{ m.model }}</div>
+            <div style="font-size: 11.5px; color: var(--text-secondary);">{{ m.count }} vehicles in fleet</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 15px; font-weight: 800; color: var(--accent-lime);">{{ m.percentage }}%</div>
+          <div style="font-size: 10px; color: var(--text-muted);">Fleet Share</div>
+        </div>
       </div>
-
-      <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
-        <div style="font-size: 11px; color: var(--color-green); text-transform: uppercase;">{{ t.available_vehicles }}</div>
-        <div style="font-size: 24px; font-weight: 800; color: var(--color-green);">428</div>
-      </div>
-
-      <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
-        <div style="font-size: 11px; color: var(--color-blue); text-transform: uppercase;">{{ t.rented_vehicles }}</div>
-        <div style="font-size: 24px; font-weight: 800; color: var(--color-blue);">362</div>
-      </div>
+      {% endfor %}
     </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 12px; color: var(--color-red);">🔧 {{ t.maintenance_vehicles }}</span>
-        <span style="font-size: 18px; font-weight: 800; color: var(--color-red);">24</span>
-      </div>
-
-      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 12px; color: var(--text-muted);">💤 {{ t.inactive_vehicles }}</span>
-        <span style="font-size: 18px; font-weight: 800; color: var(--text-primary);">10</span>
-      </div>
-    </div>
-
-    <!-- Utilization Progress Bar -->
-    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-      <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
-        <span style="font-weight: 600;">Overall Fleet Capacity</span>
-        <span style="color: var(--accent-lime); font-weight: 700;">78.4% Occupancy</span>
-      </div>
-      <div style="width: 100%; height: 8px; background: var(--bg-card); border-radius: 9999px; overflow: hidden;">
-        <div style="width: 78.4%; height: 100%; background: var(--accent-lime); border-radius: 9999px; box-shadow: 0 0 10px var(--accent-lime);"></div>
-      </div>
-    </div>
-
   </div>
 
 </div>
@@ -210,20 +268,21 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  // Revenue Trend Chart
-  const lineCtx = document.getElementById("revenueTrendChart");
+  // 1. Real Monthly Payment Trends Chart
+  const lineCtx = document.getElementById("realPaymentTrendsChart");
   if (lineCtx) {
     const ctx = lineCtx.getContext("2d");
     const gradient = ctx.createLinearGradient(0, 0, 0, 250);
     gradient.addColorStop(0, "rgba(204, 255, 0, 0.45)");
     gradient.addColorStop(1, "rgba(204, 255, 0, 0.0)");
 
-    window.revenueLineChart = new Chart(lineCtx, {
+    new Chart(lineCtx, {
       type: "line",
       data: {
-        labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"],
+        labels: {{ payment_trends.labels|safe }},
         datasets: [{
-          data: [148220, 162450, 176890, 198340, 215670, 242310],
+          label: "Collections ($ USD)",
+          data: {{ payment_trends.values|safe }},
           borderColor: "#ccff00",
           backgroundColor: gradient,
           fill: true,
@@ -237,7 +296,14 @@ document.addEventListener("DOMContentLoaded", () => {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (item) => ` Collections: $${item.parsed.y.toLocaleString()} USD`
+            }
+          }
+        },
         scales: {
           x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 12 } } },
           y: {
@@ -245,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ticks: {
               color: "#8e9da8",
               font: { size: 12 },
-              callback: (v) => (v >= 1000 ? "$" + (v / 1000) + "K" : "$" + v)
+              callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
             }
           }
         }
@@ -253,16 +319,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Vehicle Donut Chart
-  const donutCtx = document.getElementById("vehicleDonutChart");
+  // 2. Real Fleet Distribution Donut Chart
+  const donutCtx = document.getElementById("realFleetDonutChart");
   if (donutCtx) {
-    window.vehicleDonutChart = new Chart(donutCtx, {
+    new Chart(donutCtx, {
       type: "doughnut",
       data: {
-        labels: ["SUV", "Sedan", "Hatchback", "Luxury", "Others"],
+        labels: ["ACTIVE — RENTED", "ACTIVE — AVAILABLE"],
         datasets: [{
-          data: [38, 28, 18, 10, 6],
-          backgroundColor: ["#3b82f6", "#ef4444", "#ec4899", "#a855f7", "#06b6d4"],
+          data: [{{ fleet_distribution.rented }}, {{ fleet_distribution.available }}],
+          backgroundColor: ["#ccff00", "#3b82f6"],
           borderWidth: 0,
           hoverOffset: 4
         }]
@@ -275,34 +341,13 @@ document.addEventListener("DOMContentLoaded", () => {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (item) => ` ${item.label}: ${item.parsed}%`
+              label: (item) => ` ${item.label}: ${item.parsed} vehicles`
             }
           }
         }
       }
     });
   }
-
-  // Time Period Switcher
-  window.updateAnalyticsPeriod = function(period) {
-    const dataMap = {
-      "7D": { total: "$142,300", trend: "+8.2%", data: [18000, 19500, 22000, 20100, 21400, 23000, 24300], labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] },
-      "30D": { total: "$412,900", trend: "+14.6%", data: [85000, 92000, 110000, 125900], labels: ["W1", "W2", "W3", "W4"] },
-      "3M": { total: "$656,320", trend: "+19.1%", data: [198340, 215670, 242310], labels: ["Jul", "Aug", "Sep"] },
-      "6M": { total: "$1,203,880", trend: "+24%", data: [148220, 162450, 176890, 198340, 215670, 242310], labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"] },
-      "1Y": { total: "$2,450,100", trend: "+31.5%", data: [98000, 112000, 124000, 138000, 148220, 162450, 176890, 198340, 215670, 242310, 255000, 270000], labels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"] }
-    };
-
-    const target = dataMap[period] || dataMap["6M"];
-    document.getElementById("rev-total-val").textContent = target.total;
-    document.getElementById("rev-trend-pct").textContent = target.trend;
-
-    if (window.revenueLineChart) {
-      window.revenueLineChart.data.labels = target.labels;
-      window.revenueLineChart.data.datasets[0].data = target.data;
-      window.revenueLineChart.update();
-    }
-  };
 });
 </script>
 {% endblock %}

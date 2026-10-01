@@ -8,5 +8,7 @@
 5. **REST API**: All endpoints in `api/` must return structured JSON compliant with the mobile and web UI component schemas.
 6. **Sensitive Data & Credential Masking**: Automatically mask all sensitive fields (`password`, `password_hash`, `hashed_password`, `secret`, `token`, `api_key`, sensitive IDs) with `********` using `SensitiveDataMasker` before returning any query data or outputting logs.
 7. **Bilingual Support (English & Spanish)**: Provide full bilingual support for English (`en`) and Spanish (`es`) across web portal and mobile UI. Persist user language preferences and support on-the-fly toggling.
+8. **Prohibition of Dummy Data & Mandatory Real ERP Analytics**: Dummy, static, or fabricated metrics are strictly forbidden. All business metrics, KPIs, charts, tables, trends, and analytical calculations must be derived directly from the real database collections (`vehicles`, `invoices`, `paymentreceiveds`, `customers`, `drivers`, etc.) inspected from the ERP backend (`OlaCarsBackend`).
+
 
 

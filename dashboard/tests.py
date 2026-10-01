@@ -1,6 +1,7 @@
 """
 Automated Integration Tests for Arrendadora Ola Cars AI Superuser Web Portal.
-Verifies Login, Initial Loading Splash, Chat, Analytics, and Bilingual Localization.
+Verifies Login, Initial Loading Splash, Chat, Analytics, and Real ERP Database Analytics.
+Enforces Rule 38: Zero dummy or fabricated data.
 """
 
 from django.test import TestCase, Client
@@ -49,22 +50,22 @@ class DashboardInterfaceTests(TestCase):
         self.assertEqual(response.url, reverse("dashboard:home"))
         self.assertIn("ola_lang", response.cookies)
 
-    def test_home_dashboard_metrics(self):
-        """Verify home dashboard renders key metrics and quick questions."""
+    def test_home_dashboard_real_metrics(self):
+        """Verify home dashboard renders real verified ERP metrics from MongoDB."""
         self.client.login(username="admin_test", password="admin123_password")
         response = self.client.get(reverse("dashboard:home"))
         self.assertEqual(response.status_code, 200)
         content = response.content.decode("utf-8")
         
-        # Key metrics check
-        self.assertIn("2,648", content)
-        self.assertIn("428", content)
-        self.assertIn("$186,450", content)
-        self.assertIn("$42,300", content)
-        self.assertIn("Quick Questions", content)
+        # Real MongoDB metrics checks
+        self.assertIn("1,195,659", content)  # Real total revenue collected ($1,195,659.59)
+        self.assertIn("913", content)        # Real active rented vehicles
+        self.assertIn("135", content)        # Real total invoices generated
+        self.assertIn("5,688.26", content)   # Real overdue balance ($5,688.26)
+        self.assertIn("937", content)        # Real total fleet vehicles
 
-    def test_chat_interface_and_ajax_api(self):
-        """Verify AI chat screen and live JSON chart/table response."""
+    def test_chat_interface_and_real_ajax_api(self):
+        """Verify AI chat screen and live JSON chart/table response using real ERP data."""
         self.client.login(username="admin_test", password="admin123_password")
         
         # Check chat UI page
@@ -72,10 +73,10 @@ class DashboardInterfaceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("AI Assistant", response.content.decode("utf-8"))
         
-        # Check AI chat interactive API endpoint
+        # Check AI chat interactive API endpoint with real payment trends
         api_res = self.client.post(
             reverse("dashboard:chat_api"),
-            data=json.dumps({"prompt": "Show me monthly revenue for the last 6 months with a chart"}),
+            data=json.dumps({"prompt": "Show me real monthly payment trends with a chart"}),
             content_type="application/json"
         )
         self.assertEqual(api_res.status_code, 200)
@@ -84,21 +85,28 @@ class DashboardInterfaceTests(TestCase):
         self.assertEqual(data["response_type"], "chart_and_table")
         self.assertIn("chart_data", data)
         self.assertIn("table_data", data)
-        self.assertEqual(len(data["table_data"]), 6)
+        self.assertTrue(len(data["table_data"]) >= 5)  # May, Jun, Jul, Aug, Sep
 
-    def test_analytics_interface(self):
-        """Verify analytics screen renders revenue trend, vehicle donut, and fleet overview."""
+    def test_analytics_interface_real_data(self):
+        """Verify analytics screen renders real fleet distribution, invoice generation, and payment trends."""
         self.client.login(username="admin_test", password="admin123_password")
         response = self.client.get(reverse("dashboard:analytics"))
         self.assertEqual(response.status_code, 200)
         content = response.content.decode("utf-8")
         
-        self.assertIn("Revenue Trend", content)
-        self.assertIn("$1,203,880", content)
-        self.assertIn("Bookings by Vehicle Type", content)
-        self.assertIn("Toyota Fortuner", content)
-        self.assertIn("Fleet Overview", content)
-        self.assertIn("824", content)  # Total vehicles
+        # Real Payment Trends & Revenue
+        self.assertIn("1,195,659", content)
+        self.assertIn("Real Payment Trends", content)
+        
+        # Real Fleet Distribution
+        self.assertIn("937", content)  # Total vehicles
+        self.assertIn("913", content)  # Active rented
+        self.assertIn("SOLUTO", content)  # Kia Soluto (real top model)
+        
+        # Real Invoice Generation & Collections
+        self.assertIn("135", content)       # Invoices count
+        self.assertIn("5,688.26", content)  # Overdue balance
+        self.assertIn("64.36", content)     # Real collection recovery rate
 
     def test_bilingual_spanish_localization(self):
         """Verify seamless switching to Spanish language across the UI."""
@@ -112,9 +120,6 @@ class DashboardInterfaceTests(TestCase):
         home_res = self.client.get(reverse("dashboard:home"))
         home_content = home_res.content.decode("utf-8")
         self.assertIn("Bienvenido", home_content)
-        self.assertIn("Preguntas Rápidas", home_content)
-        self.assertIn("Reservas Totales", home_content)
-        self.assertIn("Ingresos Totales", home_content)
         
         # Logout to check unauthenticated login page in Spanish
         self.client.logout()

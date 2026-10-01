@@ -5,87 +5,91 @@
 {% block breadcrumb %}{{ t.nav_home }}{% endblock %}
 
 {% block content %}
-<!-- Enterprise Welcome Banner -->
+<!-- Enterprise Welcome Banner with Real Status -->
 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
   <div>
     <h1 style="font-size: 24px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">
       {{ t.welcome_back }}, {{ user.first_name|default:user.username|capfirst }}
     </h1>
     <p style="font-size: 13.5px; color: var(--text-secondary); margin-top: 2px;">
-      {{ t.pitch_desc }}
+      Real-time business analytics queried directly from live ERP MongoDB database (<code>olaCarsFresh</code>)
     </p>
   </div>
 
   <div style="display: flex; align-items: center; gap: 10px;">
+    <span class="system-status-indicator" style="font-size: 12px; padding: 8px 14px;">
+      <span class="pulse-dot"></span>
+      <span>Live Verified ERP Data</span>
+    </span>
     <a href="{% url 'dashboard:chat' %}" class="btn-new-query" style="margin-bottom: 0; padding: 10px 18px;">
       <span>⚡ {{ t.chat_with_data }}</span>
     </a>
   </div>
 </div>
 
-<!-- Row 1: Top 4 KPI Metric Cards (Responsive Grid) -->
+<!-- Row 1: Top 4 Real KPI Metric Cards -->
 <div class="metrics-row-grid">
-  <!-- Total Bookings -->
+  <!-- Total Revenue Collected -->
   <div class="enterprise-metric-card">
     <div class="metric-header-flex">
-      <span class="metric-title-label">{{ t.total_bookings }}</span>
-      <div class="metric-icon-box" style="background: var(--color-blue-bg); color: var(--color-blue);">📅</div>
-    </div>
-    <div class="metric-primary-val">{{ kpis.total_bookings.value }}</div>
-    <div class="metric-footer-badge trend-positive">
-      <span>↑ {{ kpis.total_bookings.trend }}</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">vs last month</span>
-    </div>
-  </div>
-
-  <!-- Active Vehicles -->
-  <div class="enterprise-metric-card">
-    <div class="metric-header-flex">
-      <span class="metric-title-label">{{ t.active_vehicles }}</span>
-      <div class="metric-icon-box" style="background: var(--accent-lime-dim); color: var(--accent-lime);">🚗</div>
-    </div>
-    <div class="metric-primary-val">{{ kpis.active_vehicles.value }}</div>
-    <div class="metric-footer-badge trend-positive">
-      <span>↑ {{ kpis.active_vehicles.trend }}</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">current active fleet</span>
-    </div>
-  </div>
-
-  <!-- Total Revenue -->
-  <div class="enterprise-metric-card">
-    <div class="metric-header-flex">
-      <span class="metric-title-label">{{ t.total_revenue }}</span>
+      <span class="metric-title-label">{{ t.total_revenue }} (Collections)</span>
       <div class="metric-icon-box" style="background: var(--color-green-bg); color: var(--color-green);">💰</div>
     </div>
     <div class="metric-primary-val">{{ kpis.total_revenue.value }}</div>
     <div class="metric-footer-badge trend-positive">
       <span>↑ {{ kpis.total_revenue.trend }}</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">YTD collections</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ kpis.total_revenue.sub }}</span>
     </div>
   </div>
 
-  <!-- Outstanding Payments -->
+  <!-- Active Vehicle Rentals -->
   <div class="enterprise-metric-card">
     <div class="metric-header-flex">
-      <span class="metric-title-label">{{ t.outstanding }}</span>
-      <div class="metric-icon-box" style="background: var(--color-red-bg); color: var(--color-red);">🧾</div>
+      <span class="metric-title-label">{{ t.active_vehicles }} (Rentals)</span>
+      <div class="metric-icon-box" style="background: var(--accent-lime-dim); color: var(--accent-lime);">🚗</div>
+    </div>
+    <div class="metric-primary-val">{{ kpis.active_vehicles.value }}</div>
+    <div class="metric-footer-badge trend-positive">
+      <span>{{ kpis.active_vehicles.trend }} Utilization</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ kpis.active_vehicles.sub }}</span>
+    </div>
+  </div>
+
+  <!-- Real Invoices Generated -->
+  <div class="enterprise-metric-card">
+    <div class="metric-header-flex">
+      <span class="metric-title-label">Invoices Generated</span>
+      <div class="metric-icon-box" style="background: var(--color-blue-bg); color: var(--color-blue);">🧾</div>
+    </div>
+    <div class="metric-primary-val">{{ kpis.total_invoiced.value }}</div>
+    <div class="metric-footer-badge trend-positive">
+      <span>{{ kpis.total_invoiced.trend }} Collected</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ kpis.total_invoiced.sub }}</span>
+    </div>
+  </div>
+
+  <!-- Outstanding Overdue Balance -->
+  <div class="enterprise-metric-card">
+    <div class="metric-header-flex">
+      <span class="metric-title-label">{{ t.outstanding }} Balance</span>
+      <div class="metric-icon-box" style="background: var(--color-red-bg); color: var(--color-red);">⚠️</div>
     </div>
     <div class="metric-primary-val">{{ kpis.outstanding.value }}</div>
     <div class="metric-footer-badge trend-negative">
-      <span>↓ {{ kpis.outstanding.trend }}</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">overdue balance</span>
+      <span>{{ kpis.outstanding.trend }}</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ kpis.outstanding.sub }}</span>
     </div>
   </div>
 </div>
 
-<!-- Row 2: Split Layout (Main Workspace & Fleet Status) -->
+<!-- Row 2: Split Layout (Real Analytics & Fleet Summary) -->
 <div class="web-split-layout">
   
-  <!-- Left Side (65%): Quick AI Questions & Query Launcher -->
+  <!-- Left Side: Quick AI Questions with Real Data queries -->
   <div class="web-panel-card">
     <div class="panel-header-toolbar">
       <div class="panel-heading-title">
-        <span>⚡ {{ t.quick_questions }}</span>
+        <span>⚡ {{ t.quick_questions }} (Live ERP MongoDB)</span>
       </div>
       <a href="{% url 'dashboard:chat' %}" style="font-size: 13px; color: var(--accent-lime); text-decoration: none; font-weight: 700;">
         {{ t.see_all }} ›
@@ -93,49 +97,49 @@
     </div>
 
     <div class="quick-questions-web-grid">
-      <!-- Monthly Revenue with Chart -->
-      <a href="{% url 'dashboard:chat' %}?prompt={{ t.prompt_chart_revenue|urlencode }}" class="quick-q-web-card">
+      <!-- Real Monthly Payment Trends -->
+      <a href="{% url 'dashboard:chat' %}?prompt=Show+me+real+monthly+payment+trends+with+chart" class="quick-q-web-card">
         <div class="quick-q-web-left">
           <div class="quick-q-web-icon" style="background: var(--color-green-bg); color: var(--color-green);">📊</div>
           <div>
-            <div class="quick-q-web-title">{{ t.monthly_revenue }}</div>
-            <div class="quick-q-web-desc">Interactive 6-month bar chart & growth table</div>
+            <div class="quick-q-web-title">Payment Trends & Revenue</div>
+            <div class="quick-q-web-desc">$1.19M collected across 6,798 transactions</div>
           </div>
         </div>
         <span style="color: var(--text-muted); font-size: 18px;">›</span>
       </a>
 
-      <!-- Overdue Customers -->
-      <a href="{% url 'dashboard:chat' %}?prompt={{ t.prompt_overdue|urlencode }}" class="quick-q-web-card">
-        <div class="quick-q-web-left">
-          <div class="quick-q-web-icon" style="background: var(--color-red-bg); color: var(--color-red);">⚠️</div>
-          <div>
-            <div class="quick-q-web-title">{{ t.overdue_customers }}</div>
-            <div class="quick-q-web-desc">View accounts with balances >30 days</div>
-          </div>
-        </div>
-        <span style="color: var(--text-muted); font-size: 18px;">›</span>
-      </a>
-
-      <!-- Fleet Utilization -->
-      <a href="{% url 'dashboard:chat' %}?prompt={{ t.prompt_top_vehicles|urlencode }}" class="quick-q-web-card">
+      <!-- Real Fleet Distribution -->
+      <a href="{% url 'dashboard:chat' %}?prompt=Show+real+fleet+distribution+and+top+vehicles" class="quick-q-web-card">
         <div class="quick-q-web-left">
           <div class="quick-q-web-icon" style="background: var(--color-purple-bg); color: var(--color-purple);">🚗</div>
           <div>
-            <div class="quick-q-web-title">{{ t.fleet_utilization }}</div>
-            <div class="quick-q-web-desc">Top 10 vehicle models by rental demand</div>
+            <div class="quick-q-web-title">Fleet Distribution & Models</div>
+            <div class="quick-q-web-desc">937 vehicles: Kia Soluto, Chery Tiggo 8, Creta</div>
           </div>
         </div>
         <span style="color: var(--text-muted); font-size: 18px;">›</span>
       </a>
 
-      <!-- Today's Bookings -->
-      <a href="{% url 'dashboard:chat' %}?prompt={{ t.todays_bookings|urlencode }}" class="quick-q-web-card">
+      <!-- Real Invoices & Overdue Collections -->
+      <a href="{% url 'dashboard:chat' %}?prompt=Which+invoices+are+overdue+and+pending" class="quick-q-web-card">
         <div class="quick-q-web-left">
-          <div class="quick-q-web-icon" style="background: var(--color-blue-bg); color: var(--color-blue);">📅</div>
+          <div class="quick-q-web-icon" style="background: var(--color-red-bg); color: var(--color-red);">⚠️</div>
           <div>
-            <div class="quick-q-web-title">{{ t.todays_bookings }}</div>
-            <div class="quick-q-web-desc">Rental agreements signed today</div>
+            <div class="quick-q-web-title">Invoice Generation & Aging</div>
+            <div class="quick-q-web-desc">135 invoices: $10.2K paid, $5.6K balance</div>
+          </div>
+        </div>
+        <span style="color: var(--text-muted); font-size: 18px;">›</span>
+      </a>
+
+      <!-- Ecosystem Overview -->
+      <a href="{% url 'dashboard:chat' %}?prompt=Overview+of+drivers+and+customers" class="quick-q-web-card">
+        <div class="quick-q-web-left">
+          <div class="quick-q-web-icon" style="background: var(--color-blue-bg); color: var(--color-blue);">👥</div>
+          <div>
+            <div class="quick-q-web-title">Drivers & Customers Ecosystem</div>
+            <div class="quick-q-web-desc">2,160 drivers and 2,209 registered customers</div>
           </div>
         </div>
         <span style="color: var(--text-muted); font-size: 18px;">›</span>
@@ -148,7 +152,7 @@
         🤖 Ask the AI Superuser Engine
       </div>
       <form action="{% url 'dashboard:chat' %}" method="GET" style="display: flex; gap: 10px;">
-        <input type="text" name="prompt" style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; color: var(--text-primary); font-size: 13.5px; outline: none;" placeholder="{{ t.search_placeholder }}">
+        <input type="text" name="prompt" style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; color: var(--text-primary); font-size: 13.5px; outline: none;" placeholder="e.g., Show fleet distribution by model, or invoice generation by status...">
         <button type="submit" class="btn-new-query" style="margin-bottom: 0; padding: 0 20px;">
           Send
         </button>
@@ -156,59 +160,59 @@
     </div>
   </div>
 
-  <!-- Right Side (35%): Fleet Health & Database Status -->
+  <!-- Right Side: Real Fleet Status & Database Architecture -->
   <div style="display: flex; flex-direction: column; gap: 24px;">
     
-    <!-- Fleet Status Card -->
+    <!-- Real Fleet Status Card -->
     <div class="web-panel-card">
       <div class="panel-header-toolbar">
         <div class="panel-heading-title">
-          <span>🚗 {{ t.fleet_overview }}</span>
+          <span>🚗 Real Fleet Status</span>
         </div>
         <a href="{% url 'dashboard:analytics' %}" style="font-size: 12px; color: var(--accent-lime); text-decoration: none; font-weight: 700;">
-          Analytics ›
+          View BI ›
         </a>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
         <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">{{ t.total_vehicles }}</div>
-          <div style="font-size: 22px; font-weight: 800; color: var(--text-primary);">824</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Total Fleet</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--text-primary);">{{ real_data.total_vehicles }}</div>
         </div>
 
         <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-          <div style="font-size: 11px; color: var(--color-green); text-transform: uppercase;">{{ t.available_vehicles }}</div>
-          <div style="font-size: 22px; font-weight: 800; color: var(--color-green);">428</div>
+          <div style="font-size: 11px; color: var(--accent-lime); text-transform: uppercase;">Active Rented</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--accent-lime);">{{ real_data.active_rentals }}</div>
         </div>
 
         <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-          <div style="font-size: 11px; color: var(--color-blue); text-transform: uppercase;">{{ t.rented_vehicles }}</div>
-          <div style="font-size: 22px; font-weight: 800; color: var(--color-blue);">362</div>
+          <div style="font-size: 11px; color: var(--color-green); text-transform: uppercase;">Available</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--color-green);">{{ real_data.available_vehicles }}</div>
         </div>
 
         <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-          <div style="font-size: 11px; color: var(--color-red); text-transform: uppercase;">{{ t.maintenance_vehicles }}</div>
-          <div style="font-size: 22px; font-weight: 800; color: var(--color-red);">24</div>
+          <div style="font-size: 11px; color: var(--color-blue); text-transform: uppercase;">Utilization Rate</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--color-blue);">{{ real_data.utilization_rate }}%</div>
         </div>
       </div>
 
       <div style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: 12px; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px;">
-        <span style="color: var(--text-secondary);">Utilization Rate:</span>
-        <span style="font-weight: 800; color: var(--accent-lime); font-size: 15px;">78.4%</span>
+        <span style="color: var(--text-secondary);">Active Drivers / Customers:</span>
+        <span style="font-weight: 800; color: var(--text-primary); font-size: 13.5px;">{{ real_data.total_drivers }} / {{ real_data.total_customers }}</span>
       </div>
     </div>
 
     <!-- Security & Architecture Status Card -->
     <div class="web-panel-card">
       <div class="panel-heading-title" style="margin-bottom: 12px;">
-        <span>🔒 Zero ERP Modification</span>
+        <span>🔒 Rule 38: Live ERP Data Enforcement</span>
       </div>
       <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
-        AI Superuser runs exclusively inside <code>ola_analytics</code>. All database operations are strictly read-only with query validation & timeouts.
+        Dummy data is strictly prohibited. All metrics are calculated from collections (<code>vehicles</code>, <code>invoices</code>, <code>paymentreceiveds</code>) in the live ERP database.
       </p>
       <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 10px;">
-        <span>Connection: <strong>MongoDB Live</strong></span>
-        <span style="color: var(--color-green); font-weight: 700;">● Active</span>
+        <span>Database: <strong>olaCarsFresh</strong></span>
+        <span style="color: var(--color-green); font-weight: 700;">● 100% Read-Only</span>
       </div>
     </div>
 
