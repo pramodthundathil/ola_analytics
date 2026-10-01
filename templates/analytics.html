@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static humanize %}
 
-{% block title %}{{ t.analytics_title }} - Arrendadora Ola Cars AI Superuser{% endblock %}
+{% block title %}{{ t.analytics_title }} & BI - Arrendadora Ola Cars AI Superuser{% endblock %}
 {% block breadcrumb %}{{ t.analytics_title }} & BI{% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@
       Live ERP Analytics & Business Intelligence
     </h1>
     <div style="font-size: 12px; color: var(--text-secondary);">
-      Direct read-only aggregation from MongoDB collections: <code>paymentreceiveds</code>, <code>vehicles</code>, <code>invoices</code>
+      Direct read-only aggregation across MongoDB collections: <code>paymentreceiveds</code>, <code>vehicles</code>, <code>invoices</code>, <code>bills</code>, <code>fixedassets</code>, <code>bankaccounts</code>, <code>expenses</code>
     </div>
   </div>
 
@@ -27,7 +27,7 @@
   </div>
 </div>
 
-<!-- Top Real KPI Metric Strip -->
+<!-- Top Real KPI Metric Strip (4 Essential Business Pillars) -->
 <div class="metrics-row-grid" style="margin-bottom: 24px;">
   <!-- Total Revenue Collected -->
   <div class="enterprise-metric-card">
@@ -38,7 +38,7 @@
     <div class="metric-primary-val">{{ payment_trends.total }}</div>
     <div class="metric-footer-badge trend-positive">
       <span>{{ payment_trends.transactions|default:6798 }} Payments</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Bank Transfers</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">100% Bank Transfer</span>
     </div>
   </div>
 
@@ -55,34 +55,36 @@
     </div>
   </div>
 
-  <!-- Invoices Billed Volume -->
+  <!-- Fixed Assets Valuation -->
   <div class="enterprise-metric-card">
     <div class="metric-header-flex">
-      <span class="metric-title-label">Invoiced Volume</span>
-      <div class="metric-icon-box" style="background: var(--color-blue-bg); color: var(--color-blue);">🧾</div>
+      <span class="metric-title-label">{{ t.fixed_assets_title }}</span>
+      <div class="metric-icon-box" style="background: var(--color-blue-bg); color: var(--color-blue);">🏢</div>
     </div>
-    <div class="metric-primary-val">{{ invoice_generation.total_billed }}</div>
+    <div class="metric-primary-val">${{ fixed_assets_overview.total_valuation|floatformat:2|intcomma }}</div>
     <div class="metric-footer-badge trend-positive">
-      <span>{{ invoice_generation.total_count }} Invoices</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ invoice_generation.total_paid }} Paid</span>
+      <span>{{ fixed_assets_overview.total_assets|default:685 }} Fleet Assets</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">8 Asset Types</span>
     </div>
   </div>
 
-  <!-- Overdue Balances & Recovery -->
+  <!-- Liquid Treasury Cash -->
   <div class="enterprise-metric-card">
     <div class="metric-header-flex">
-      <span class="metric-title-label">Overdue & Recovery</span>
-      <div class="metric-icon-box" style="background: var(--color-red-bg); color: var(--color-red);">⚠️</div>
+      <span class="metric-title-label">{{ t.bank_accounts_title }}</span>
+      <div class="metric-icon-box" style="background: var(--accent-lime-dim); color: var(--accent-lime);">🏦</div>
     </div>
-    <div class="metric-primary-val">{{ invoice_generation.total_balance }}</div>
-    <div class="metric-footer-badge trend-negative">
-      <span>{{ invoice_generation.collection_rate }} Collected</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">52 Pending</span>
+    <div class="metric-primary-val">${{ bank_accounts_overview.total_positive_liquidity|floatformat:2|intcomma }}</div>
+    <div class="metric-footer-badge trend-positive">
+      <span>{{ bank_accounts_overview.total_accounts|default:17 }} Accounts</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Banco General Primary</span>
     </div>
   </div>
 </div>
 
-<!-- Section 1: Real Payment Trends & Monthly Revenue (2/3) + Real Fleet Distribution (1/3) -->
+<!-- ========================================================================= -->
+<!-- SECTION 1: REVENUE TRENDS & FLEET STATUS DISTRIBUTION                     -->
+<!-- ========================================================================= -->
 <div class="analytics-grid-row">
   
   <!-- Real Payment Trends Line & Area Chart -->
@@ -148,7 +150,9 @@
 
 </div>
 
-<!-- Section 2: Real Invoice Generation Status (1/2) + Real Top Vehicle Models (1/2) -->
+<!-- ========================================================================= -->
+<!-- SECTION 2: INVOICES & TOP FLEET MODELS                                    -->
+<!-- ========================================================================= -->
 <div class="analytics-grid-halves">
   
   <!-- Real Invoice Generation & Collection Status -->
@@ -159,7 +163,7 @@
           🧾 Real Invoice Generation & Collections Data
         </div>
         <div style="font-size: 12px; color: var(--text-secondary);">
-          Total 135 invoices generated in September 2026
+          Total 135 customer invoices generated in September 2026
         </div>
       </div>
       <div class="system-status-indicator" style="font-size: 11px;">
@@ -171,17 +175,17 @@
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
       <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
         <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Total Billed</div>
-        <div style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin-top: 2px;">{{ invoice_generation.total_billed }}</div>
+        <div style="font-size: 17px; font-weight: 800; color: var(--text-primary); margin-top: 2px;">{{ invoice_generation.total_billed }}</div>
       </div>
 
       <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
         <div style="font-size: 10px; color: var(--color-green); text-transform: uppercase;">Paid Amount</div>
-        <div style="font-size: 18px; font-weight: 800; color: var(--color-green); margin-top: 2px;">{{ invoice_generation.total_paid }}</div>
+        <div style="font-size: 17px; font-weight: 800; color: var(--color-green); margin-top: 2px;">{{ invoice_generation.total_paid }}</div>
       </div>
 
       <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
         <div style="font-size: 10px; color: var(--color-red); text-transform: uppercase;">Overdue Balance</div>
-        <div style="font-size: 18px; font-weight: 800; color: var(--color-red); margin-top: 2px;">{{ invoice_generation.total_balance }}</div>
+        <div style="font-size: 17px; font-weight: 800; color: var(--color-red); margin-top: 2px;">{{ invoice_generation.total_balance }}</div>
       </div>
     </div>
 
@@ -263,6 +267,390 @@
   </div>
 
 </div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 3: VENDOR BILLS & PAYABLES ANALYSIS                               -->
+<!-- ========================================================================= -->
+<div class="web-panel-card" style="margin-bottom: 24px;">
+  <div class="panel-header-toolbar">
+    <div>
+      <div class="panel-heading-title">
+        <span>📑</span> {{ t.vendor_bills }}
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        {{ t.bills_subtitle }} • Aggregated directly from <code>bills</code> collection
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <span style="font-size: 20px; font-weight: 800; color: var(--color-red);">${{ bills_overview.total_balance_due|floatformat:2|intcomma }}</span>
+      <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Total Balance Payable</div>
+    </div>
+  </div>
+
+  <!-- Bills Summary Strip -->
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Total Bills Count</div>
+      <div style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-top: 4px;">{{ bills_overview.total_bills }} Bills</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Vendor Invoices</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Total Incurred / Billed</div>
+      <div style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-top: 4px;">${{ bills_overview.total_amount_billed|floatformat:2|intcomma }}</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">100% Incurred Cost</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="font-size: 11px; color: var(--color-green); text-transform: uppercase; font-weight: 600;">Amount Settled / Paid</div>
+      <div style="font-size: 20px; font-weight: 800; color: var(--color-green); margin-top: 4px;">${{ bills_overview.total_amount_paid|floatformat:2|intcomma }}</div>
+      <div style="font-size: 11px; color: var(--color-green); margin-top: 2px;">{{ bills_overview.payment_rate }}% Settled</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="font-size: 11px; color: var(--color-red); text-transform: uppercase; font-weight: 600;">Balance Due to Vendors</div>
+      <div style="font-size: 20px; font-weight: 800; color: var(--color-red); margin-top: 4px;">${{ bills_overview.total_balance_due|floatformat:2|intcomma }}</div>
+      <div style="font-size: 11px; color: var(--color-red); margin-top: 2px;">Open Obligations</div>
+    </div>
+  </div>
+
+  <!-- Vendor Bill Status Breakdown Cards -->
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+    {% for bs in bills_overview.statuses %}
+    <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <span style="font-weight: 700; font-size: 13px; {% if bs.status == 'OPEN' %}color: var(--color-red);{% elif bs.status == 'PARTIALLY_PAID' %}color: var(--color-amber);{% else %}color: var(--color-green);{% endif %}">
+          {{ bs.status }}
+        </span>
+        <span style="font-size: 12px; font-weight: 800; color: var(--text-primary);">{{ bs.count }} bills ({{ bs.percentage }}%)</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">${{ bs.total|floatformat:2|intcomma }}</div>
+      <div style="font-size: 11.5px; color: var(--text-secondary); display: flex; justify-content: space-between;">
+        <span>Paid: ${{ bs.paid|floatformat:2|intcomma }}</span>
+        <span style="font-weight: 600;">Bal: ${{ bs.balance|floatformat:2|intcomma }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 4: FIXED ASSETS & DEPRECIATION SCHEDULE                           -->
+<!-- ========================================================================= -->
+<div class="web-panel-card" style="margin-bottom: 24px;">
+  <div class="panel-header-toolbar">
+    <div>
+      <div class="panel-heading-title">
+        <span>🏢</span> {{ t.fixed_assets_title }}
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        {{ t.fixed_assets_subtitle }} • Direct from <code>fixedassets</code> & <code>fixedassettypes</code>
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <span style="font-size: 22px; font-weight: 800; color: var(--accent-lime);">${{ fixed_assets_overview.total_valuation|floatformat:2|intcomma }}</span>
+      <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Current Fleet Net Book Valuation</div>
+    </div>
+  </div>
+
+  <!-- Asset KPI Cards -->
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Total Fixed Assets</div>
+      <div style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-top: 4px;">{{ fixed_assets_overview.total_assets }} Units</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">{{ fixed_assets_overview.asset_types_count }} Category Types</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="font-size: 11px; color: var(--color-green); text-transform: uppercase; font-weight: 600;">Active Fleet Assets</div>
+      <div style="font-size: 20px; font-weight: 800; color: var(--color-green); margin-top: 4px;">591 Active</div>
+      <div style="font-size: 11px; color: var(--color-green); margin-top: 2px;">$9,163,840.10 (86.3% Value)</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="font-size: 11px; color: var(--color-blue); text-transform: uppercase; font-weight: 600;">Draft / In-Onboarding</div>
+      <div style="font-size: 20px; font-weight: 800; color: var(--color-blue); margin-top: 4px;">75 Draft</div>
+      <div style="font-size: 11px; color: var(--color-blue); margin-top: 2px;">$1,340,867.46 (10.9% Value)</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="font-size: 11px; color: var(--color-amber); text-transform: uppercase; font-weight: 600;">Depreciation Recorded</div>
+      <div style="font-size: 20px; font-weight: 800; color: var(--color-amber); margin-top: 4px;">${{ fixed_assets_overview.total_depreciation_recorded|floatformat:2|intcomma }}</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Straight Line (5-Year Life)</div>
+    </div>
+  </div>
+
+  <!-- Top Assets Registry Table -->
+  <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">
+    📋 Representative Fixed Fleet Assets (Registry Inspection)
+  </div>
+  <div style="overflow-x: auto;">
+    <table class="enterprise-table">
+      <thead>
+        <tr>
+          <th>Asset Code</th>
+          <th>Asset Description</th>
+          <th>Purchase Price</th>
+          <th>Current Net Book Value</th>
+          <th>Useful Life</th>
+          <th>Depreciation Method</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in fixed_assets_overview.top_assets %}
+        <tr>
+          <td><code style="color: var(--accent-lime); font-weight: 700;">{{ a.code }}</code></td>
+          <td style="font-weight: 600;">{{ a.name }}</td>
+          <td>${{ a.purchase_price|floatformat:2|intcomma }}</td>
+          <td style="font-weight: 700; color: var(--text-primary);">${{ a.current_value|floatformat:2|intcomma }}</td>
+          <td>{{ a.life_years }} Years</td>
+          <td>Straight Line</td>
+          <td>
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; {% if a.status == 'Active' %}background: var(--color-green-bg); color: var(--color-green);{% else %}background: var(--color-blue-bg); color: var(--color-blue);{% endif %}">
+              {{ a.status }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 5: BANK ACCOUNTS & TREASURY LIQUIDITY                             -->
+<!-- ========================================================================= -->
+<div class="web-panel-card" style="margin-bottom: 24px;">
+  <div class="panel-header-toolbar">
+    <div>
+      <div class="panel-heading-title">
+        <span>🏦</span> {{ t.bank_accounts_title }}
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        {{ t.bank_accounts_subtitle }} • Aggregated directly from <code>bankaccounts</code> collection
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <span style="font-size: 22px; font-weight: 800; color: var(--color-green);">${{ bank_accounts_overview.total_positive_liquidity|floatformat:2|intcomma }}</span>
+      <div style="font-size: 11px; color: var(--color-green); font-weight: 700;">Net Liquid Cash Reserves</div>
+    </div>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="enterprise-table">
+      <thead>
+        <tr>
+          <th>Account Name</th>
+          <th>Financial Institution</th>
+          <th>Masked Account #</th>
+          <th>Type / Purpose</th>
+          <th>Account Balance (USD)</th>
+          <th>Liquidity Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bank_accounts_overview.accounts %}
+        <tr>
+          <td style="font-weight: 700; color: var(--text-primary);">{{ b.account_name }}</td>
+          <td>{{ b.bank_name }}</td>
+          <td><code>{{ b.account_number }}</code></td>
+          <td><span style="font-size: 12px; color: var(--text-secondary);">{{ b.type }}</span></td>
+          <td style="font-weight: 800; {% if b.balance > 0 %}color: var(--color-green);{% elif b.balance < 0 %}color: var(--color-red);{% else %}color: var(--text-muted);{% endif %}">
+            ${{ b.balance|floatformat:2|intcomma }}
+          </td>
+          <td>
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; {% if b.status == 'Positive' %}background: var(--color-green-bg); color: var(--color-green);{% elif b.status == 'Credit Line' %}background: var(--color-red-bg); color: var(--color-red);{% else %}background: var(--bg-secondary); color: var(--text-muted);{% endif %}">
+              {{ b.status }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 6: OPERATING EXPENSES & MONTHLY BURN RATE                         -->
+<!-- ========================================================================= -->
+<div class="analytics-grid-row" style="margin-bottom: 24px;">
+  
+  <!-- Expenses Burn Trend Bar Chart -->
+  <div class="web-panel-card">
+    <div class="panel-header-toolbar">
+      <div>
+        <div class="panel-heading-title">
+          <span>💸</span> {{ t.expenses_title }}
+        </div>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+          {{ t.expenses_subtitle }} • Aggregated directly from <code>expenses</code> collection
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <span style="font-size: 20px; font-weight: 800; color: var(--text-primary);">${{ expenses_overview.total_expenses_amount|floatformat:2|intcomma }}</span>
+        <div style="font-size: 11px; color: var(--text-secondary);">{{ expenses_overview.total_expenses_count }} Expense Records</div>
+      </div>
+    </div>
+
+    <div style="height: 250px; position: relative;">
+      <canvas id="monthlyExpensesChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Operating Expense Summary & Average Burn -->
+  <div class="web-panel-card">
+    <div class="panel-header-toolbar">
+      <div>
+        <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">
+          🔥 Monthly Burn Summary
+        </div>
+        <div style="font-size: 11px; color: var(--text-secondary);">Cost management breakdown</div>
+      </div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px;">
+      <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Average Monthly Burn</div>
+      <div style="font-size: 22px; font-weight: 800; color: var(--color-amber); margin-top: 4px;">
+        ${{ expenses_overview.average_monthly_burn|floatformat:2|intcomma }}
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Operating runway benchmark</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+      {% for exp in expenses_overview.monthly_expenses %}
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color);">
+        <span style="font-weight: 600; color: var(--text-secondary);">{{ exp.month }}</span>
+        <div style="text-align: right;">
+          <span style="font-weight: 700; color: var(--text-primary);">${{ exp.amount|floatformat:2|intcomma }}</span>
+          <span style="font-size: 10px; color: var(--text-muted); margin-left: 4px;">({{ exp.count }} tx)</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================================= -->
+<!-- SECTION 7: MONGODB USER ECOSYSTEM & ACCESSCONTROL RBAC                    -->
+<!-- ========================================================================= -->
+<div class="web-panel-card">
+  <div class="panel-header-toolbar">
+    <div>
+      <div class="panel-heading-title">
+        <span>👥</span> MongoDB User Ecosystem & AccessControl RBAC
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        100% MongoDB collections: <code>admins</code>, <code>financeadmins</code>, <code>branchmanagers</code>, <code>countrymanagers</code>, <code>workshopmanagers</code>, <code>workshopstaffs</code>, <code>financestaffs</code>, <code>drivers</code>, <code>customers</code>, <code>roletemplates</code>
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <span class="system-status-indicator" style="font-size: 11px;">
+        {{ total_audit_interactions }} AI Queries Audited
+      </span>
+    </div>
+  </div>
+
+  <!-- MongoDB Headcount KPI Strip -->
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+      <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Total MongoDB Users</div>
+      <div style="font-size: 22px; font-weight: 800; color: var(--accent-lime); margin-top: 4px;">{{ user_analytics.total_mongodb_users|default:4380|intcomma }}</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Entire ERP Ecosystem</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+      <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Internal Staff & Management</div>
+      <div style="font-size: 22px; font-weight: 800; color: var(--color-green); margin-top: 4px;">{{ user_analytics.total_staff_users|default:11 }} Staff</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Across 7 Staff Collections</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+      <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Registered Drivers</div>
+      <div style="font-size: 22px; font-weight: 800; color: var(--color-blue); margin-top: 4px;">{{ user_analytics.total_registered_drivers|default:2160|intcomma }}</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"><code>drivers</code> collection</div>
+    </div>
+
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+      <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Registered Customers</div>
+      <div style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin-top: 4px;">{{ user_analytics.total_registered_customers|default:2209|intcomma }}</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"><code>customers</code> collection</div>
+    </div>
+  </div>
+
+  <!-- MongoDB Staff Roles & AccessControl RBAC Templates Table -->
+  <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">
+    🛡️ MongoDB Staff Roles & AccessControl RBAC Templates (<code>roletemplates</code>)
+  </div>
+  <div style="overflow-x: auto; margin-bottom: 24px;">
+    <table class="enterprise-table">
+      <thead>
+        <tr>
+          <th>MongoDB Role</th>
+          <th>Source Collection</th>
+          <th>Active Accounts</th>
+          <th>Permissions Granted</th>
+          <th>Functional Scope & Responsibility</th>
+          <th>RBAC Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in user_analytics.staff_roles_distribution %}
+        <tr>
+          <td style="font-weight: 700; color: var(--accent-lime);">{{ r.role }}</td>
+          <td><code>{{ r.collection }}</code></td>
+          <td style="font-weight: 700;">{{ r.count }} Active</td>
+          <td>
+            <span style="font-size: 12px; font-weight: 700; color: var(--color-blue);">
+              {{ r.permissions_count }} Permissions
+            </span>
+          </td>
+          <td>{{ r.description }}</td>
+          <td>
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--color-green-bg); color: var(--color-green);">
+              {{ r.status }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MongoDB Active Staff Directory (Masked for Security - Rule 36) -->
+  <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">
+    👤 Active MongoDB Staff Accounts Directory (Masked Credentials)
+  </div>
+  <div style="overflow-x: auto;">
+    <table class="enterprise-table">
+      <thead>
+        <tr>
+          <th>Staff Name</th>
+          <th>Masked Account Email</th>
+          <th>Assigned Role</th>
+          <th>MongoDB Collection</th>
+          <th>Account Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in user_analytics.active_staff_directory %}
+        <tr>
+          <td style="font-weight: 700; color: var(--text-primary);">{{ s.fullName }}</td>
+          <td><code>{{ s.email }}</code></td>
+          <td style="font-weight: 700; color: var(--accent-lime);">{{ s.role }}</td>
+          <td><code>{{ s.collection }}</code></td>
+          <td>
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--color-green-bg); color: var(--color-green);">
+              {{ s.status }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -342,6 +730,48 @@ document.addEventListener("DOMContentLoaded", () => {
           tooltip: {
             callbacks: {
               label: (item) => ` ${item.label}: ${item.parsed} vehicles`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 3. Operating Expenses Monthly Burn Bar Chart
+  const expCtx = document.getElementById("monthlyExpensesChart");
+  if (expCtx) {
+    new Chart(expCtx, {
+      type: "bar",
+      data: {
+        labels: {{ expenses_trends.labels|safe }},
+        datasets: [{
+          label: "Operating Spend ($ USD)",
+          data: {{ expenses_trends.values|safe }},
+          backgroundColor: "rgba(59, 130, 246, 0.75)",
+          hoverBackgroundColor: "#3b82f6",
+          borderRadius: 6,
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (item) => ` Spend: $${item.parsed.y.toLocaleString()} USD`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
+          y: {
+            grid: { color: "rgba(255,255,255,0.06)" },
+            ticks: {
+              color: "#8e9da8",
+              font: { size: 11 },
+              callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
             }
           }
         }

@@ -129,3 +129,74 @@ class DashboardInterfaceTests(TestCase):
         self.assertIn("Bienvenido de Nuevo", login_content)
         self.assertIn("Inicia sesión en tu cuenta de superusuario", login_content)
         self.assertIn("Pregunta. Analiza. Actúa.", login_content)
+
+    def test_analytics_extended_domains(self):
+        """
+        Verify analytics screen renders all extended ERP domains:
+        - Bills & Payables (222 bills, $2.38M billed, $2.11M due)
+        - Fixed Assets & Depreciation (685 assets, $10.50M valuation, FA-00475)
+        - Bank Accounts & Treasury (17 accounts, $408.6K liquidity, CT 7905)
+        - Operating Expenses (2,227 records, $5.21M spend, monthly burn)
+        - User Ecosystem & Roles (2,160 drivers, 2,209 customers, RBAC matrix)
+        """
+        self.client.login(username="admin_test", password="admin123_password")
+        response = self.client.get(reverse("dashboard:analytics"))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+
+        # 1. Bills & Payables
+        self.assertIn("222 Bills", content)
+        self.assertIn("2,383,657.28", content)
+        self.assertIn("2,107,574.59", content)
+        self.assertIn("190 bills", content)
+
+        # 2. Fixed Assets & Depreciation
+        self.assertIn("685 Units", content)
+        self.assertIn("10,504,707.56", content)
+        self.assertIn("FA-00475", content)
+        self.assertIn("5 Years", content)
+
+        # 3. Bank Accounts & Balances
+        self.assertIn("408,622.75", content)
+        self.assertIn("Banco General CT 7905", content)
+        self.assertIn("367,565.87", content)
+        self.assertIn("****7905", content)
+
+        # 4. Operating Expenses
+        self.assertIn("5,211,749.86", content)
+        self.assertIn("2227 Expense Records", content)
+        self.assertIn("331,797.70", content)
+
+        # 5. MongoDB User Ecosystem & AccessControl RBAC
+        self.assertIn("4,380", content)  # Total MongoDB Users
+        self.assertIn("11 Staff", content)  # Internal Staff across MongoDB collections
+        self.assertIn("2,160", content)  # Registered drivers in drivers collection
+        self.assertIn("2,209", content)  # Registered customers in customers collection
+        self.assertIn("FINANCEADMIN", content)  # MongoDB Role
+        self.assertIn("WORKSHOPMANAGER", content)  # MongoDB Role
+        self.assertIn("financeadmins", content)  # MongoDB Collection
+        self.assertIn("admins", content)  # MongoDB Collection
+
+    def test_ai_chat_extended_domains_queries(self):
+        """Verify AI chat assistant provides real data answers for bills, fixed assets, bank accounts, expenses."""
+        self.client.login(username="admin_test", password="admin123_password")
+
+        queries = [
+            ("Show me vendor bills status and payables", "2,383,657.28"),
+            ("What is the valuation of fixed assets and depreciation?", "10,504,707.56"),
+            ("What are our bank accounts and cash balances?", "367,565.87"),
+            ("Show operating expenses and monthly burn rate", "5,211,749.86"),
+            ("Show user role distribution and active drivers", "2,160")
+        ]
+
+        for prompt, expected_text in queries:
+            res = self.client.post(
+                reverse("dashboard:chat_api"),
+                data=json.dumps({"prompt": prompt}),
+                content_type="application/json"
+            )
+            self.assertEqual(res.status_code, 200)
+            data = res.json()
+            self.assertEqual(data["status"], "success")
+            self.assertIn(expected_text, data["message"])
+

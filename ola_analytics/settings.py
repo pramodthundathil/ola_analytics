@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "analytics",
     "api",
     "dashboard",
+    "django.contrib.humanize",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

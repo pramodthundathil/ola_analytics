@@ -102,6 +102,18 @@ TRANSLATIONS = {
         "data_sources": "Data Sources",
         "user_management": "User Management",
         "settings": "Settings",
+
+        # Extended Analytics (Bills, Fixed Assets, Bank Accounts, Expenses, User Roles)
+        "vendor_bills": "Vendor Bills & Payables",
+        "bills_subtitle": "Accounts payable status & vendor obligations",
+        "fixed_assets_title": "Fixed Assets & Depreciation",
+        "fixed_assets_subtitle": "Asset registry valuation, useful life & depreciation schedule",
+        "bank_accounts_title": "Bank Accounts & Treasury Liquidity",
+        "bank_accounts_subtitle": "Real cash positions across operating & reserve accounts",
+        "expenses_title": "Operating Expenses & Monthly Burn",
+        "expenses_subtitle": "Operating spend patterns & monthly cost burn trends",
+        "user_roles_title": "User Ecosystem & RBAC Interactions",
+        "user_roles_subtitle": "Audit activity, driver counts & customer directory",
     },
     
     "es": {
@@ -202,6 +214,18 @@ TRANSLATIONS = {
         "data_sources": "Fuentes de Datos",
         "user_management": "Gestión de Usuarios",
         "settings": "Configuración",
+
+        # Extended Analytics (Bills, Fixed Assets, Bank Accounts, Expenses, User Roles)
+        "vendor_bills": "Facturas de Proveedores y Cuentas por Pagar",
+        "bills_subtitle": "Estado de cuentas por pagar y obligaciones con proveedores",
+        "fixed_assets_title": "Activos Fijos y Depreciación",
+        "fixed_assets_subtitle": "Valoración del registro de activos, vida útil y cronograma de depreciación",
+        "bank_accounts_title": "Cuentas Bancarias y Liquidez de Tesorería",
+        "bank_accounts_subtitle": "Posiciones de efectivo reales en cuentas operativas y de reserva",
+        "expenses_title": "Gastos Operativos y Tasa de Consumo Mensual",
+        "expenses_subtitle": "Patrones de gasto operativo y tendencias de costo mensual",
+        "user_roles_title": "Ecosistema de Usuarios e Interacciones RBAC",
+        "user_roles_subtitle": "Actividad de auditoría, recuento de conductores y directorio de clientes",
     }
 }
 
