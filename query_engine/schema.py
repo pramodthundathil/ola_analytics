@@ -1,7 +1,7 @@
 """
 Schema Discovery Module for Ola Cars ERP.
 Inspects database collections/tables, fields, indexes, and relationships.
-Provides schema metadata to LLMs and Query Engine.
+Provides schema metadata to LLMs and Query Engine. All financial metrics are in USD ($).
 """
 
 import os
@@ -11,82 +11,83 @@ from typing import Dict, Any, List
 
 class SchemaDiscovery:
     """
-    Discovers database schema structures from ERP data sources.
-    Supports MongoDB collections (OlaCarsBackend standard) and SQL databases.
+    Discovers database schema structures from live ERP data sources.
+    Supports MongoDB collections (OlaCarsBackend standard).
     """
 
-    # Pre-cached metadata for core Ola Cars ERP Collections (discovered from OlaCarsBackend)
     KNOWN_COLLECTIONS = {
-        "customers": {
-            "name": "Customer",
-            "description": "Stores client, driver, and company profiles with billing/shipping addresses",
+        "drivers": {
+            "name": "Driver",
+            "description": "Registered drivers, personal profiles, licensing, and contact info",
             "fields": {
-                "customerId": "String (Unique Customer ID)",
-                "name": "String (Customer full name)",
-                "email": "String (Customer email)",
-                "phone": "String (Contact phone number)",
-                "companyName": "String (Organization/Company name)",
-                "openingBalance": "Number (Opening account balance)",
-                "creditLimit": "Number (Credit threshold)",
-                "status": "String (ACTIVE / INACTIVE)",
-                "branch": "ObjectId (Ref: Branch)"
+                "driverId": "String (Unique Driver ID e.g. OLA-000001)",
+                "status": "String (ACTIVE / SUSPENDED / DRAFT / REJECTED)",
+                "personalInfo.fullName": "String (Driver Full Name)",
+                "personalInfo.email": "String (Email Address)",
+                "personalInfo.phone": "String (Phone Number)",
+                "personalInfo.whatsappNumber": "String (WhatsApp Number)",
+                "drivingLicense.licenseNumber": "String (License No)",
+                "drivingLicense.expiryDate": "Date (License Expiry)"
             }
         },
         "invoices": {
             "name": "Invoice",
-            "description": "Billing records for rental, workshop, manual, and deposit invoices",
+            "description": "Billing records for rental, workshop, manual, and deposit invoices (amounts in USD $)",
             "fields": {
-                "invoiceNumber": "String (Unique invoice number)",
+                "invoiceNumber": "String (Unique invoice number e.g. INV-000001)",
                 "invoiceType": "String (RENTAL / WORKSHOP / MANUAL / DEPOSIT)",
                 "customer": "ObjectId (Ref: Customer)",
                 "driver": "ObjectId (Ref: Driver)",
                 "vehicle": "ObjectId (Ref: Vehicle)",
-                "totalAmountDue": "Number (Total amount payable)",
-                "amountPaid": "Number (Amount received)",
-                "balance": "Number (Outstanding balance)",
-                "status": "String (DRAFT / PENDING / PARTIAL / PAID / OVERDUE / CANCELLED)",
-                "dueDate": "Date (Payment due date)",
-                "generatedAt": "Date (Creation timestamp)"
+                "driverName": "String (Populated Driver Name)",
+                "customerName": "String (Populated Customer Name)",
+                "totalAmountDue": "Number (Total amount payable in USD $)",
+                "amountPaid": "Number (Amount received in USD $)",
+                "balance": "Number (Outstanding balance in USD $)",
+                "status": "String (PAID / OVERDUE / PENDING / PARTIAL)",
+                "dueDate": "Date (Payment due date)"
             }
         },
         "vehicles": {
             "name": "Vehicle",
-            "description": "Vehicle fleet inventory, registration, status, and rental rates",
+            "description": "Vehicle fleet inventory, registration, status, and weekly rates (amounts in USD $)",
             "fields": {
-                "registrationNumber": "String (License plate / Reg No)",
-                "make": "String (Manufacturer e.g. Maruti, Hyundai)",
-                "model": "String (Vehicle model name)",
-                "year": "Number (Manufacturing year)",
-                "status": "String (AVAILABLE / RENTED / MAINTENANCE / SCRAPPED)",
-                "branch": "ObjectId (Ref: Branch)",
-                "dailyRate": "Number (Daily rental fee)",
-                "weeklyRate": "Number (Weekly rental fee)"
+                "legalDocs.registrationNumber": "String (License plate / Reg No)",
+                "basicDetails.make": "String (Manufacturer e.g. KIA, Hyundai)",
+                "basicDetails.model": "String (Vehicle model name)",
+                "basicDetails.year": "Number (Manufacturing year)",
+                "basicDetails.weeklyRent": "Number (Weekly rent in USD $)",
+                "status": "String (ACTIVE — AVAILABLE / ACTIVE — RENTED / MAINTENANCE)",
+                "currentDriver": "ObjectId (Ref: Driver)"
             }
         },
-        "agreements": {
-            "name": "Agreement",
-            "description": "Rental contracts binding customers and vehicles for specific durations",
+        "customers": {
+            "name": "Customer",
+            "description": "Stores client and driver profiles with billing addresses",
             "fields": {
-                "agreementNumber": "String (Contract identifier)",
-                "customer": "ObjectId (Ref: Customer)",
-                "vehicle": "ObjectId (Ref: Vehicle)",
-                "startDate": "Date (Rental start date)",
-                "endDate": "Date (Rental end date)",
-                "status": "String (ACTIVE / COMPLETED / TERMINATED / CANCELLED)",
-                "rate": "Number (Agreed rental rate)"
+                "name": "String (Customer full name)",
+                "email": "String (Customer email)",
+                "phone": "String (Contact phone number)",
+                "companyName": "String (Organization/Company name)"
             }
         },
-        "payments": {
-            "name": "Payment",
-            "description": "Transactions of received payments and collections",
+        "bills": {
+            "name": "Bill",
+            "description": "Vendor bills and supplier records (amounts in USD $)",
             "fields": {
-                "paymentNumber": "String (Payment reference ID)",
-                "customer": "ObjectId (Ref: Customer)",
-                "invoice": "ObjectId (Ref: Invoice)",
-                "amount": "Number (Payment amount)",
-                "paymentMethod": "String (Cash, Bank Transfer, Card, Mobile Money)",
-                "paymentDate": "Date (Timestamp of transaction)",
-                "status": "String (COMPLETED / PENDING / FAILED / REFUNDED)"
+                "billNumber": "String (Unique bill number)",
+                "vendor": "String (Supplier name)",
+                "totalAmount": "Number (Total amount in USD $)",
+                "status": "String (OPEN / PAID / PARTIALLY_PAID)"
+            }
+        },
+        "expenses": {
+            "name": "Expense",
+            "description": "Operational and maintenance expenses (amounts in USD $)",
+            "fields": {
+                "expenseCategory": "String (Expense category)",
+                "amount": "Number (Expense amount in USD $)",
+                "paymentMethod": "String (Payment method)"
             }
         }
     }
@@ -97,6 +98,7 @@ class SchemaDiscovery:
         return {
             "database_name": "olaCarsFresh",
             "engine": "MongoDB",
+            "currency": "USD ($)",
             "collections": cls.KNOWN_COLLECTIONS
         }
 
