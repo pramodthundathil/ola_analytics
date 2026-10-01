@@ -22,6 +22,9 @@ class HealthCheckView(APIView):
             "security": "Read-Only Database Enforcement Active"
         })
 
+    def post(self, request):
+        return self.get(request)
+
 
 class AIChatView(APIView):
     """
@@ -31,10 +34,16 @@ class AIChatView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    def get(self, request):
+        return Response({
+            "status": "active",
+            "message": "AI Chat endpoint is active. Send a POST request with {'prompt': '...'} to query."
+        })
+
     def post(self, request):
-        user_prompt = request.data.get("prompt", "").strip()
+        user_prompt = request.data.get("prompt", "").strip() if isinstance(request.data, dict) else ""
         if not user_prompt:
-            return Response({"error": "Prompt parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+            user_prompt = "overview"
 
         lower_prompt = user_prompt.lower()
 
@@ -97,15 +106,18 @@ class AIChatView(APIView):
             }
 
         # Log Audit
-        AIAuditLog.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            user_prompt=user_prompt,
-            generated_sql="-- Auto-generated read-only aggregation",
-            status="SUCCESS",
-            execution_time_ms=res_data.get("data_source_info", {}).get("execution_time_ms", 25.0),
-            tables_accessed=res_data.get("data_source_info", {}).get("tables_accessed", []),
-            row_count=len(res_data.get("data", [])) if isinstance(res_data.get("data"), list) else 1
-        )
+        try:
+            AIAuditLog.objects.create(
+                user=request.user if hasattr(request, "user") and request.user.is_authenticated else None,
+                user_prompt=user_prompt,
+                generated_sql="-- Auto-generated read-only aggregation",
+                status="SUCCESS",
+                execution_time_ms=res_data.get("data_source_info", {}).get("execution_time_ms", 25.0),
+                tables_accessed=res_data.get("data_source_info", {}).get("tables_accessed", []),
+                row_count=len(res_data.get("data", [])) if isinstance(res_data.get("data"), list) else 1
+            )
+        except Exception:
+            pass
 
         return Response(res_data)
 
@@ -121,6 +133,9 @@ class AnalyticsSummaryView(APIView):
             "metrics": mcp_get_standard_metrics("all")
         })
 
+    def post(self, request):
+        return self.get(request)
+
 
 class SchemaDiscoveryView(APIView):
     """Database schema metadata endpoint."""
@@ -132,6 +147,9 @@ class SchemaDiscoveryView(APIView):
         if col_name:
             return Response(SchemaDiscovery.get_collection_summary(col_name))
         return Response(SchemaDiscovery.get_full_schema())
+
+    def post(self, request):
+        return self.get(request)
 
 
 class OpenAPISchemaView(APIView):
@@ -201,4 +219,5 @@ class OpenAPISchemaView(APIView):
             "security": []
         })
 
-
+    def post(self, request):
+        return self.get(request)
