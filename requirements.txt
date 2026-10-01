@@ -1,0 +1,22 @@
+# Ola Analytics - AI Superuser & Data Analytics Platform Dependencies
+
+# Django Web & REST Framework
+Django>=5.0.0,<6.0.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.3.0
+
+# Database & MongoDB Drivers
+pymongo[srv]>=4.6.0
+dnspython>=2.6.0
+
+# Environment Variable Management
+python-dotenv>=1.0.0
+
+# Model Context Protocol (MCP) Server
+mcp>=1.0.0
+
+# HTTP Requests & Utilities
+requests>=2.31.0
+
+# Production WSGI Application Server
+gunicorn>=21.2.0
