@@ -2,11 +2,12 @@ from django.urls import path, re_path
 from .views import (
     HealthCheckView, AIChatView, AnalyticsSummaryView, SchemaDiscoveryView,
     OpenAPISchemaView, AuthLoginView, OAuthAuthorizeView, OAuthTokenView,
-    RemoteMCPSSEView, RemoteMCPMessagesView
+    RemoteMCPSSEView, RemoteMCPMessagesView, StreamableMCPView
 )
 
 urlpatterns = [
     path("", OpenAPISchemaView.as_view(), name="api_root"),
+    re_path(r"^mcp/?$", StreamableMCPView.as_view(), name="api_streamable_mcp"),
     re_path(r"^auth/login/?$", AuthLoginView.as_view(), name="api_auth_login"),
     re_path(r"^authorize/?$", OAuthAuthorizeView.as_view(), name="api_oauth_authorize"),
     re_path(r"^token/?$", OAuthTokenView.as_view(), name="api_oauth_token"),

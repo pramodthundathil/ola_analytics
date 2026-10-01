@@ -100,15 +100,33 @@ class OAuthTokenView(APIView):
         return self.post(request)
 
 
+class StreamableMCPView(APIView):
+    """
+    Streamable HTTP MCP Endpoint for Anthropic Claude Custom Connectors (URL: /mcp).
+    Handles initialize, tools/list, and tools/call JSON-RPC 2.0 requests directly over HTTP.
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        data = request.data if isinstance(request.data, dict) else {}
+        response_data = mcp_server.handle_request(data)
+        return Response(response_data)
+
+    def get(self, request):
+        response_data = mcp_server.handle_request({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+        return Response(response_data)
+
+
 class RemoteMCPSSEView(APIView):
     """
-    Remote MCP Server-Sent Events (SSE) Endpoint for Anthropic Claude Custom Connectors.
+    Remote MCP Server-Sent Events (SSE) Endpoint for Anthropic Claude Custom Connectors (URL: /sse).
     """
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def get(self, request):
-        messages_url = request.build_absolute_uri("/api/v1/mcp/messages/")
+        messages_url = request.build_absolute_uri("/mcp")
         def event_stream():
             yield f"event: endpoint\ndata: {messages_url}\n\n"
 
@@ -124,7 +142,6 @@ class RemoteMCPSSEView(APIView):
 class RemoteMCPMessagesView(APIView):
     """
     Remote MCP JSON-RPC 2.0 Messages Endpoint for Anthropic Claude Custom Connectors.
-    Handles tools/list and tools/call JSON-RPC requests from Claude.
     """
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -283,15 +300,22 @@ class OpenAPISchemaView(APIView):
                 {"url": host_url}
             ],
             "paths": {
+                "/mcp": {
+                    "post": {
+                        "summary": "Streamable HTTP MCP Endpoint",
+                        "operationId": "postStreamableMCP",
+                        "responses": {"200": {"description": "MCP JSON-RPC response"}}
+                    },
+                    "get": {
+                        "summary": "Streamable HTTP MCP Tools List",
+                        "operationId": "getStreamableMCP",
+                        "responses": {"200": {"description": "MCP Tools List"}}
+                    }
+                },
                 "/auth/login/": {
                     "post": {
                         "summary": "Sign-in and API key authentication",
                         "operationId": "postAuthLogin",
-                        "responses": {"200": {"description": "Authentication status & token"}}
-                    },
-                    "get": {
-                        "summary": "Sign-in verification",
-                        "operationId": "getAuthLogin",
                         "responses": {"200": {"description": "Authentication status & token"}}
                     }
                 },
@@ -307,20 +331,6 @@ class OpenAPISchemaView(APIView):
                         "summary": "OAuth 2.0 Token Endpoint",
                         "operationId": "postOAuthToken",
                         "responses": {"200": {"description": "Access token response"}}
-                    }
-                },
-                "/mcp/sse": {
-                    "get": {
-                        "summary": "Remote MCP SSE Server Endpoint",
-                        "operationId": "getRemoteMCPSSE",
-                        "responses": {"200": {"description": "Server-Sent Events Stream"}}
-                    }
-                },
-                "/mcp/messages": {
-                    "post": {
-                        "summary": "Remote MCP JSON-RPC 2.0 Messages Endpoint",
-                        "operationId": "postRemoteMCPMessages",
-                        "responses": {"200": {"description": "JSON-RPC tool response"}}
                     }
                 },
                 "/health/": {
@@ -349,20 +359,6 @@ class OpenAPISchemaView(APIView):
                             }
                         },
                         "responses": {"200": {"description": "Structured AI analytics response"}}
-                    }
-                },
-                "/analytics/": {
-                    "get": {
-                        "summary": "Get standard business KPIs and metrics",
-                        "operationId": "getAnalytics",
-                        "responses": {"200": {"description": "Standard business metrics"}}
-                    }
-                },
-                "/schema/": {
-                    "get": {
-                        "summary": "Discover ERP database schema metadata",
-                        "operationId": "getSchema",
-                        "responses": {"200": {"description": "Database schema metadata"}}
                     }
                 }
             },

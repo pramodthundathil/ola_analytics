@@ -3,13 +3,16 @@ from django.urls import path, re_path, include
 from api.views import (
     HealthCheckView, OAuthAuthorizeView, OAuthTokenView,
     OpenAPISchemaView, SchemaDiscoveryView, AIChatView,
-    AnalyticsSummaryView, RemoteMCPSSEView, RemoteMCPMessagesView
+    AnalyticsSummaryView, RemoteMCPSSEView, RemoteMCPMessagesView, StreamableMCPView
 )
 
 urlpatterns = [
     path("", HealthCheckView.as_view(), name="root_health"),
     path("admin/", admin.site.urls),
     
+    # Streamable HTTP MCP Route (Recommended by Anthropic Claude Docs)
+    re_path(r"^mcp/?$", StreamableMCPView.as_view(), name="root_mcp_streamable"),
+
     # OAuth 2.0 Authorization Code Flow Routes
     re_path(r"^authorize/?$", OAuthAuthorizeView.as_view(), name="root_oauth_authorize"),
     re_path(r"^token/?$", OAuthTokenView.as_view(), name="root_oauth_token"),
