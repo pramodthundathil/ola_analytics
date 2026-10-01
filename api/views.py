@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from query_engine.validator import QueryValidator
 from query_engine.executor import ReadOnlyQueryExecutor
 from query_engine.schema import SchemaDiscovery
@@ -10,6 +11,9 @@ from audit.models import AIAuditLog
 
 class HealthCheckView(APIView):
     """System Health Endpoint"""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def get(self, request):
         return Response({
             "system": "Ola Cars AI Superuser Analytics",
@@ -24,6 +28,9 @@ class AIChatView(APIView):
     Primary AI Chat Endpoint for Web and React Native apps.
     Receives user natural language prompt and returns structured JSON responses.
     """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def post(self, request):
         user_prompt = request.data.get("prompt", "").strip()
         if not user_prompt:
@@ -105,6 +112,9 @@ class AIChatView(APIView):
 
 class AnalyticsSummaryView(APIView):
     """Standard pre-calculated business analytics endpoint."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def get(self, request):
         return Response({
             "status": "success",
@@ -114,6 +124,9 @@ class AnalyticsSummaryView(APIView):
 
 class SchemaDiscoveryView(APIView):
     """Database schema metadata endpoint."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def get(self, request):
         col_name = request.query_params.get("collection")
         if col_name:
@@ -123,6 +136,9 @@ class SchemaDiscoveryView(APIView):
 
 class OpenAPISchemaView(APIView):
     """Standard OpenAPI 3.0 Specification Endpoint for Claude Custom Connectors and API Clients."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def get(self, request):
         host_url = request.build_absolute_uri("/api/v1")
         return Response({
@@ -184,4 +200,5 @@ class OpenAPISchemaView(APIView):
             },
             "security": []
         })
+
 
