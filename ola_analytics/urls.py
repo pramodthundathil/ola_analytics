@@ -1,17 +1,27 @@
 from django.contrib import admin
 from django.urls import path, re_path, include
-from api.views import HealthCheckView, OAuthAuthorizeView, OAuthTokenView, OpenAPISchemaView, SchemaDiscoveryView, AIChatView, AnalyticsSummaryView
+from api.views import (
+    HealthCheckView, OAuthAuthorizeView, OAuthTokenView,
+    OpenAPISchemaView, SchemaDiscoveryView, AIChatView,
+    AnalyticsSummaryView, RemoteMCPSSEView, RemoteMCPMessagesView
+)
 
 urlpatterns = [
     path("", HealthCheckView.as_view(), name="root_health"),
     path("admin/", admin.site.urls),
     
-    # OAuth 2.0 Direct Domain Routes (for Claude OAuth Flow)
+    # OAuth 2.0 Authorization Code Flow Routes
     re_path(r"^authorize/?$", OAuthAuthorizeView.as_view(), name="root_oauth_authorize"),
     re_path(r"^token/?$", OAuthTokenView.as_view(), name="root_oauth_token"),
     re_path(r"^oauth/authorize/?$", OAuthAuthorizeView.as_view(), name="root_oauth_authorize_alt"),
     re_path(r"^oauth/token/?$", OAuthTokenView.as_view(), name="root_oauth_token_alt"),
-    
+
+    # Anthropic Remote MCP Protocol Routes
+    re_path(r"^sse/?$", RemoteMCPSSEView.as_view(), name="root_mcp_sse"),
+    re_path(r"^messages/?$", RemoteMCPMessagesView.as_view(), name="root_mcp_messages"),
+    re_path(r"^mcp/sse/?$", RemoteMCPSSEView.as_view(), name="root_mcp_sse_alt"),
+    re_path(r"^mcp/messages/?$", RemoteMCPMessagesView.as_view(), name="root_mcp_messages_alt"),
+
     # Direct Root API shortcuts
     re_path(r"^schema/?$", SchemaDiscoveryView.as_view(), name="root_schema"),
     re_path(r"^openapi\.json/?$", OpenAPISchemaView.as_view(), name="root_openapi"),

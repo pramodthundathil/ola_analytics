@@ -3,12 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, StreamingHttpResponse
 from query_engine.validator import QueryValidator
 from query_engine.executor import ReadOnlyQueryExecutor
 from query_engine.schema import SchemaDiscovery
 from mcp_integration.tools import mcp_get_standard_metrics
 from audit.models import AIAuditLog
+import mcp_server
 
 
 class HealthCheckView(APIView):
@@ -97,6 +98,45 @@ class OAuthTokenView(APIView):
 
     def get(self, request):
         return self.post(request)
+
+
+class RemoteMCPSSEView(APIView):
+    """
+    Remote MCP Server-Sent Events (SSE) Endpoint for Anthropic Claude Custom Connectors.
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        messages_url = request.build_absolute_uri("/api/v1/mcp/messages/")
+        def event_stream():
+            yield f"event: endpoint\ndata: {messages_url}\n\n"
+
+        response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"
+        return response
+
+    def post(self, request):
+        return self.get(request)
+
+
+class RemoteMCPMessagesView(APIView):
+    """
+    Remote MCP JSON-RPC 2.0 Messages Endpoint for Anthropic Claude Custom Connectors.
+    Handles tools/list and tools/call JSON-RPC requests from Claude.
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        data = request.data if isinstance(request.data, dict) else {}
+        response_data = mcp_server.handle_request(data)
+        return Response(response_data)
+
+    def get(self, request):
+        init_response = mcp_server.handle_request({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+        return Response(init_response)
 
 
 class AIChatView(APIView):
@@ -267,6 +307,20 @@ class OpenAPISchemaView(APIView):
                         "summary": "OAuth 2.0 Token Endpoint",
                         "operationId": "postOAuthToken",
                         "responses": {"200": {"description": "Access token response"}}
+                    }
+                },
+                "/mcp/sse": {
+                    "get": {
+                        "summary": "Remote MCP SSE Server Endpoint",
+                        "operationId": "getRemoteMCPSSE",
+                        "responses": {"200": {"description": "Server-Sent Events Stream"}}
+                    }
+                },
+                "/mcp/messages": {
+                    "post": {
+                        "summary": "Remote MCP JSON-RPC 2.0 Messages Endpoint",
+                        "operationId": "postRemoteMCPMessages",
+                        "responses": {"200": {"description": "JSON-RPC tool response"}}
                     }
                 },
                 "/health/": {
