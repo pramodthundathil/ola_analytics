@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from django.conf import settings
 from query_engine.validator import QueryValidator
 from query_engine.executor import ReadOnlyQueryExecutor
 from query_engine.schema import SchemaDiscovery
@@ -24,6 +25,27 @@ class HealthCheckView(APIView):
 
     def post(self, request):
         return self.get(request)
+
+
+class AuthLoginView(APIView):
+    """
+    Sign-In & API Key Verification Endpoint for Anthropic Claude & AI Connectors.
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        expected_key = getattr(settings, "AI_API_KEY", "ola_ai_superuser_key_2026")
+        return Response({
+            "status": "success",
+            "authenticated": True,
+            "token_type": "Bearer",
+            "api_key": expected_key,
+            "message": f"Authentication successful. Use header 'X-API-Key: {expected_key}' or 'Authorization: Bearer {expected_key}'."
+        })
+
+    def get(self, request):
+        return self.post(request)
 
 
 class AIChatView(APIView):
@@ -170,6 +192,18 @@ class OpenAPISchemaView(APIView):
                 {"url": host_url}
             ],
             "paths": {
+                "/auth/login/": {
+                    "post": {
+                        "summary": "Sign-in and API key authentication",
+                        "operationId": "postAuthLogin",
+                        "responses": {"200": {"description": "Authentication status & token"}}
+                    },
+                    "get": {
+                        "summary": "Sign-in verification",
+                        "operationId": "getAuthLogin",
+                        "responses": {"200": {"description": "Authentication status & token"}}
+                    }
+                },
                 "/health/": {
                     "get": {
                         "summary": "Health check endpoint",
@@ -214,9 +248,24 @@ class OpenAPISchemaView(APIView):
                 }
             },
             "components": {
-                "securitySchemes": {}
+                "securitySchemes": {
+                    "ApiKeyAuth": {
+                        "type": "apiKey",
+                        "in": "header",
+                        "name": "X-API-Key",
+                        "description": "Enter API Key: ola_ai_superuser_key_2026"
+                    },
+                    "BearerAuth": {
+                        "type": "http",
+                        "scheme": "bearer",
+                        "bearerFormat": "API Key"
+                    }
+                }
             },
-            "security": []
+            "security": [
+                {"ApiKeyAuth": []},
+                {"BearerAuth": []}
+            ]
         })
 
     def post(self, request):

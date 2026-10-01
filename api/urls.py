@@ -1,8 +1,9 @@
 from django.urls import path, re_path
-from .views import HealthCheckView, AIChatView, AnalyticsSummaryView, SchemaDiscoveryView, OpenAPISchemaView
+from .views import HealthCheckView, AIChatView, AnalyticsSummaryView, SchemaDiscoveryView, OpenAPISchemaView, AuthLoginView
 
 urlpatterns = [
     path("", OpenAPISchemaView.as_view(), name="api_root"),
+    re_path(r"^auth/login/?$", AuthLoginView.as_view(), name="api_auth_login"),
     re_path(r"^health/?$", HealthCheckView.as_view(), name="api_health"),
     re_path(r"^chat/?$", AIChatView.as_view(), name="api_ai_chat"),
     re_path(r"^analytics/?$", AnalyticsSummaryView.as_view(), name="api_analytics"),
