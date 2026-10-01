@@ -263,4 +263,78 @@ class DashboardInterfaceTests(TestCase):
         self.assertIn("Real Fleet Model Distribution", analytics_content)
         self.assertIn("MongoDB Staff Roles & AccessControl RBAC Templates", analytics_content)
 
+    def test_backend_pagination_api_endpoint(self):
+        """
+        Verify server-side backend pagination API endpoint:
+        - Correct pagination slicing, total_pages, and navigation flags
+        - Page size 'all' handling
+        - Search query filtering
+        - Sorting by numeric/string keys
+        """
+        self.client.login(username="admin_test", password="admin123_password")
+
+        # 1. Page 1 with page_size=5
+        url = reverse("dashboard:api_table_pagination") + "?table_id=models&page=1&page_size=5"
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["table_id"], "models")
+        self.assertEqual(data["page"], 1)
+        self.assertEqual(data["page_size"], 5)
+        self.assertEqual(len(data["items"]), 5)
+        self.assertEqual(data["total_records"], 20)
+        self.assertEqual(data["total_pages"], 4)
+        self.assertTrue(data["has_next"])
+        self.assertFalse(data["has_previous"])
+
+        # 2. Page 2 with page_size=5
+        url_p2 = reverse("dashboard:api_table_pagination") + "?table_id=models&page=2&page_size=5"
+        res_p2 = self.client.get(url_p2)
+        data_p2 = res_p2.json()
+        self.assertEqual(data_p2["page"], 2)
+        self.assertEqual(len(data_p2["items"]), 5)
+        self.assertTrue(data_p2["has_previous"])
+
+        # 3. Page size 'all'
+        url_all = reverse("dashboard:api_table_pagination") + "?table_id=models&page=1&page_size=all"
+        res_all = self.client.get(url_all)
+        data_all = res_all.json()
+        self.assertEqual(len(data_all["items"]), 20)
+        self.assertEqual(data_all["total_pages"], 1)
+
+        # 4. Search filtering
+        url_search = reverse("dashboard:api_table_pagination") + "?table_id=models&q=soluto"
+        res_search = self.client.get(url_search)
+        data_search = res_search.json()
+        self.assertTrue(any("SOLUTO" in item["model"].upper() for item in data_search["items"]))
+
+        # 5. Sorting
+        url_sort = reverse("dashboard:api_table_pagination") + "?table_id=models&sort_by=count&sort_dir=asc"
+        res_sort = self.client.get(url_sort)
+        data_sort = res_sort.json()
+        counts = [item["count"] for item in data_sort["items"]]
+        self.assertEqual(counts, sorted(counts))
+
+    def test_responsive_markup_and_live_home_chart(self):
+        """
+        Verify responsive HTML classes, backdrop, and live payment trends chart on home.
+        """
+        self.client.login(username="admin_test", password="admin123_password")
+        res = self.client.get(reverse("dashboard:home"))
+        self.assertEqual(res.status_code, 200)
+        content = res.content.decode("utf-8")
+        
+        # Responsive sidebar backdrop
+        self.assertIn("sidebar-backdrop", content)
+        # Responsive chart boxes
+        self.assertIn("chart-responsive-box", content)
+        # Responsive table wrappers
+        self.assertIn("table-responsive-wrapper", content)
+        # Home live payment trends chart canvas
+        self.assertIn("homePaymentTrendsChart", content)
+        # Backend pagination data attribute
+        self.assertIn('data-backend="true"', content)
+
+
 

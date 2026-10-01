@@ -276,8 +276,8 @@
       </a>
     </div>
 
-    <div style="overflow-x: auto;">
-      <table class="enterprise-table">
+    <div class="table-responsive-wrapper">
+      <table class="enterprise-table" data-backend="true" data-table-id="models">
         <thead>
           <tr>
             <th>Vehicle Make & Model</th>
@@ -288,7 +288,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for m in fleet_distribution.top_models %}
+          {% for m in models_paginated.items %}
           <tr>
             <td style="font-weight: 700; color: var(--text-primary);">
               🚗 {{ m.make }} {{ m.model }}
@@ -311,6 +311,34 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+
+    <!-- Backend Pagination Footer -->
+    <div class="table-pagination-footer">
+      <div class="table-info-counter">
+        Showing <strong>{{ models_paginated.start_index }}</strong> to <strong>{{ models_paginated.end_index }}</strong> of <strong>{{ models_paginated.total_records }}</strong> models
+      </div>
+      <div class="table-pagination-nav">
+        {% if models_paginated.has_previous %}
+          <a href="?range={{ time_range }}&page_models={{ models_paginated.previous_page_number }}" class="page-nav-btn">‹ Prev</a>
+        {% else %}
+          <button class="page-nav-btn disabled" disabled>‹ Prev</button>
+        {% endif %}
+
+        {% for p in models_paginated.page_range %}
+          {% if p == models_paginated.page %}
+            <button class="page-num-btn active">{{ p }}</button>
+          {% else %}
+            <a href="?range={{ time_range }}&page_models={{ p }}" class="page-num-btn">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if models_paginated.has_next %}
+          <a href="?range={{ time_range }}&page_models={{ models_paginated.next_page_number }}" class="page-nav-btn">Next ›</a>
+        {% else %}
+          <button class="page-nav-btn disabled" disabled>Next ›</button>
+        {% endif %}
+      </div>
     </div>
   </div>
 
@@ -432,8 +460,8 @@
   <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">
     📋 Representative Fixed Fleet Assets (Registry Inspection)
   </div>
-  <div style="overflow-x: auto;">
-    <table class="enterprise-table">
+  <div class="table-responsive-wrapper">
+    <table class="enterprise-table" data-backend="true" data-table-id="assets">
       <thead>
         <tr>
           <th>Asset Code</th>
@@ -446,7 +474,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for a in fixed_assets_overview.top_assets %}
+        {% for a in assets_paginated.items %}
         <tr>
           <td><code style="color: var(--accent-lime); font-weight: 700;">{{ a.code }}</code></td>
           <td style="font-weight: 600;">{{ a.name }}</td>
@@ -463,6 +491,32 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+  <!-- Assets Pagination Footer -->
+  <div class="table-pagination-footer">
+    <div class="table-info-counter">
+      Showing <strong>{{ assets_paginated.start_index }}</strong> to <strong>{{ assets_paginated.end_index }}</strong> of <strong>{{ assets_paginated.total_records }}</strong> assets
+    </div>
+    <div class="table-pagination-nav">
+      {% if assets_paginated.has_previous %}
+        <a href="?range={{ time_range }}&page_assets={{ assets_paginated.previous_page_number }}" class="page-nav-btn">‹ Prev</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>‹ Prev</button>
+      {% endif %}
+      {% for p in assets_paginated.page_range %}
+        {% if p == assets_paginated.page %}
+          <button class="page-num-btn active">{{ p }}</button>
+        {% else %}
+          <a href="?range={{ time_range }}&page_assets={{ p }}" class="page-num-btn">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if assets_paginated.has_next %}
+        <a href="?range={{ time_range }}&page_assets={{ assets_paginated.next_page_number }}" class="page-nav-btn">Next ›</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>Next ›</button>
+      {% endif %}
+    </div>
   </div>
 </div>
 
@@ -485,8 +539,8 @@
     </div>
   </div>
 
-  <div style="overflow-x: auto;">
-    <table class="enterprise-table">
+  <div class="table-responsive-wrapper">
+    <table class="enterprise-table" data-backend="true" data-table-id="accounts">
       <thead>
         <tr>
           <th>Account Name</th>
@@ -498,7 +552,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for b in bank_accounts_overview.accounts %}
+        {% for b in accounts_paginated.items %}
         <tr>
           <td style="font-weight: 700; color: var(--text-primary);">{{ b.account_name }}</td>
           <td>{{ b.bank_name }}</td>
@@ -516,6 +570,32 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+  <!-- Accounts Pagination Footer -->
+  <div class="table-pagination-footer">
+    <div class="table-info-counter">
+      Showing <strong>{{ accounts_paginated.start_index }}</strong> to <strong>{{ accounts_paginated.end_index }}</strong> of <strong>{{ accounts_paginated.total_records }}</strong> accounts
+    </div>
+    <div class="table-pagination-nav">
+      {% if accounts_paginated.has_previous %}
+        <a href="?range={{ time_range }}&page_accounts={{ accounts_paginated.previous_page_number }}" class="page-nav-btn">‹ Prev</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>‹ Prev</button>
+      {% endif %}
+      {% for p in accounts_paginated.page_range %}
+        {% if p == accounts_paginated.page %}
+          <button class="page-num-btn active">{{ p }}</button>
+        {% else %}
+          <a href="?range={{ time_range }}&page_accounts={{ p }}" class="page-num-btn">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if accounts_paginated.has_next %}
+        <a href="?range={{ time_range }}&page_accounts={{ accounts_paginated.next_page_number }}" class="page-nav-btn">Next ›</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>Next ›</button>
+      {% endif %}
+    </div>
   </div>
 </div>
 
@@ -631,8 +711,8 @@
   <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">
     🛡️ MongoDB Staff Roles & AccessControl RBAC Templates (<code>roletemplates</code>)
   </div>
-  <div style="overflow-x: auto; margin-bottom: 24px;">
-    <table class="enterprise-table">
+  <div class="table-responsive-wrapper" style="margin-bottom: 24px;">
+    <table class="enterprise-table" data-backend="true" data-table-id="roles">
       <thead>
         <tr>
           <th>MongoDB Role</th>
@@ -644,7 +724,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for r in user_analytics.staff_roles_distribution %}
+        {% for r in roles_paginated.items %}
         <tr>
           <td style="font-weight: 700; color: var(--accent-lime);">{{ r.role }}</td>
           <td><code>{{ r.collection }}</code></td>
@@ -666,12 +746,38 @@
     </table>
   </div>
 
+  <!-- Roles Pagination Footer -->
+  <div class="table-pagination-footer" style="margin-bottom: 24px;">
+    <div class="table-info-counter">
+      Showing <strong>{{ roles_paginated.start_index }}</strong> to <strong>{{ roles_paginated.end_index }}</strong> of <strong>{{ roles_paginated.total_records }}</strong> roles
+    </div>
+    <div class="table-pagination-nav">
+      {% if roles_paginated.has_previous %}
+        <a href="?range={{ time_range }}&page_roles={{ roles_paginated.previous_page_number }}" class="page-nav-btn">‹ Prev</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>‹ Prev</button>
+      {% endif %}
+      {% for p in roles_paginated.page_range %}
+        {% if p == roles_paginated.page %}
+          <button class="page-num-btn active">{{ p }}</button>
+        {% else %}
+          <a href="?range={{ time_range }}&page_roles={{ p }}" class="page-num-btn">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if roles_paginated.has_next %}
+        <a href="?range={{ time_range }}&page_roles={{ roles_paginated.next_page_number }}" class="page-nav-btn">Next ›</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>Next ›</button>
+      {% endif %}
+    </div>
+  </div>
+
   <!-- MongoDB Active Staff Directory (Masked for Security - Rule 36) -->
   <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">
     👤 Active MongoDB Staff Accounts Directory (Masked Credentials)
   </div>
-  <div style="overflow-x: auto;">
-    <table class="enterprise-table">
+  <div class="table-responsive-wrapper">
+    <table class="enterprise-table" data-backend="true" data-table-id="staff">
       <thead>
         <tr>
           <th>Staff Name</th>
@@ -682,7 +788,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for s in user_analytics.active_staff_directory %}
+        {% for s in staff_paginated.items %}
         <tr>
           <td style="font-weight: 700; color: var(--text-primary);">{{ s.fullName }}</td>
           <td><code>{{ s.email }}</code></td>
@@ -697,6 +803,32 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+  <!-- Staff Pagination Footer -->
+  <div class="table-pagination-footer">
+    <div class="table-info-counter">
+      Showing <strong>{{ staff_paginated.start_index }}</strong> to <strong>{{ staff_paginated.end_index }}</strong> of <strong>{{ staff_paginated.total_records }}</strong> accounts
+    </div>
+    <div class="table-pagination-nav">
+      {% if staff_paginated.has_previous %}
+        <a href="?range={{ time_range }}&page_staff={{ staff_paginated.previous_page_number }}" class="page-nav-btn">‹ Prev</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>‹ Prev</button>
+      {% endif %}
+      {% for p in staff_paginated.page_range %}
+        {% if p == staff_paginated.page %}
+          <button class="page-num-btn active">{{ p }}</button>
+        {% else %}
+          <a href="?range={{ time_range }}&page_staff={{ p }}" class="page-num-btn">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if staff_paginated.has_next %}
+        <a href="?range={{ time_range }}&page_staff={{ staff_paginated.next_page_number }}" class="page-nav-btn">Next ›</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>Next ›</button>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}

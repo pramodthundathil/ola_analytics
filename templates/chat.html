@@ -300,6 +300,11 @@ function appendAiResponse(data) {
 
   container.appendChild(bubble);
   scrollToBottom();
+  setTimeout(() => {
+    if (window.initEnterpriseTables) {
+      window.initEnterpriseTables(bubble);
+    }
+  }, 100);
 }
 
 async function sendChatQuery(prompt) {

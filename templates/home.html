@@ -113,7 +113,31 @@
   </div>
 </div>
 
-<!-- Row 2: Split Layout (Real Analytics & Fleet Summary) -->
+<!-- Row 2: Live Payment Trends & Collections Dynamics Chart -->
+<div class="web-panel-card" style="margin-bottom: 24px;">
+  <div class="panel-header-toolbar">
+    <div>
+      <div class="panel-heading-title">
+        <span>📈</span> Real Payment Trends & Revenue Dynamics
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        Live collections aggregated from <code>paymentreceiveds</code> • Active Range: <strong>{{ time_cfg.label_en }}</strong> ({{ time_cfg.date_desc }})
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-size: 24px; font-weight: 800; color: var(--accent-lime);">{{ home_chart.total }}</div>
+      <div style="font-size: 11px; color: var(--color-green); font-weight: 700;">
+        {{ home_chart.transactions }} Transactions • All-time: {{ home_chart.all_time_total }} ({{ home_chart.all_time_transactions }} tx)
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-responsive-box" style="height: 240px; position: relative;">
+    <canvas id="homePaymentTrendsChart"></canvas>
+  </div>
+</div>
+
+<!-- Row 3: Split Layout (Real Analytics & Fleet Summary) -->
 <div class="web-split-layout">
   
   <!-- Left Side: Quick AI Questions with Real Data queries -->
@@ -251,7 +275,7 @@
 
 </div>
 
-<!-- Row 3: Paginated, Searchable, Sortable Fleet Inventory Directory -->
+<!-- Row 4: Backend Paginated, Searchable, Sortable Fleet Inventory Directory -->
 <div class="web-panel-card" style="margin-top: 24px;">
   <div class="panel-header-toolbar">
     <div>
@@ -259,7 +283,7 @@
         <span>🚗</span> Real Fleet Inventory & Models Directory
       </div>
       <div style="font-size: 12px; color: var(--text-secondary);">
-        Interactive sorting, live search filter & pagination with "Show All" option • Aggregated from <code>vehicles</code> collection
+        Backend paginated & sorted with live search filter • Aggregated from <code>vehicles</code> collection
       </div>
     </div>
     <span class="system-status-indicator" style="font-size: 11px;">
@@ -267,20 +291,47 @@
     </span>
   </div>
 
-  <div style="overflow-x: auto;">
-    <table class="enterprise-table">
+  <!-- Table Controls Toolbar -->
+  <form method="GET" action="{% url 'dashboard:home' %}" class="table-controls-toolbar" style="margin-bottom: 14px;">
+    <input type="hidden" name="range" value="{{ time_range }}">
+    {% if time_cfg.start_date %}<input type="hidden" name="start_date" value="{{ time_cfg.start_date }}">{% endif %}
+    {% if time_cfg.end_date %}<input type="hidden" name="end_date" value="{{ time_cfg.end_date }}">{% endif %}
+
+    <div class="table-search-box">
+      <input type="text" name="q" class="table-search-input" placeholder="Search make, model, fuel..." value="{{ fleet_q }}">
+      {% if fleet_q %}
+        <a href="?range={{ time_range }}" class="table-search-clear" title="Clear Search">✕</a>
+      {% endif %}
+    </div>
+
+    <div class="table-controls-right">
+      <div class="table-pagesize-wrap">
+        <label style="font-size: 11.5px; color: var(--text-secondary);">Rows:</label>
+        <select name="page_size" class="table-pagesize-select" onchange="this.form.submit()">
+          <option value="5" {% if fleet_page_size == '5' or fleet_page_size == 5 %}selected{% endif %}>5</option>
+          <option value="10" {% if fleet_page_size == '10' or fleet_page_size == 10 or not fleet_page_size %}selected{% endif %}>10</option>
+          <option value="25" {% if fleet_page_size == '25' or fleet_page_size == 25 %}selected{% endif %}>25</option>
+          <option value="all" {% if fleet_page_size == 'all' %}selected{% endif %}>Show All</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-apply-date" style="padding: 6px 14px; font-size: 12px;">Filter</button>
+    </div>
+  </form>
+
+  <div class="table-responsive-wrapper">
+    <table class="enterprise-table" data-backend="true" data-table-id="models">
       <thead>
         <tr>
-          <th>Vehicle Make</th>
-          <th>Model Specification</th>
-          <th>Vehicles in Fleet</th>
+          <th class="sortable-th"><a href="?range={{ time_range }}&sort_by=make&sort_dir={% if fleet_sort == 'make' and fleet_dir == 'asc' %}desc{% else %}asc{% endif %}&q={{ fleet_q }}&page_size={{ fleet_page_size }}" style="text-decoration: none; color: inherit;">Vehicle Make {% if fleet_sort == 'make' %}{% if fleet_dir == 'asc' %}▲{% else %}▼{% endif %}{% else %}↕{% endif %}</a></th>
+          <th class="sortable-th"><a href="?range={{ time_range }}&sort_by=model&sort_dir={% if fleet_sort == 'model' and fleet_dir == 'asc' %}desc{% else %}asc{% endif %}&q={{ fleet_q }}&page_size={{ fleet_page_size }}" style="text-decoration: none; color: inherit;">Model Specification {% if fleet_sort == 'model' %}{% if fleet_dir == 'asc' %}▲{% else %}▼{% endif %}{% else %}↕{% endif %}</a></th>
+          <th class="sortable-th"><a href="?range={{ time_range }}&sort_by=count&sort_dir={% if fleet_sort == 'count' and fleet_dir == 'desc' %}asc{% else %}desc{% endif %}&q={{ fleet_q }}&page_size={{ fleet_page_size }}" style="text-decoration: none; color: inherit;">Vehicles in Fleet {% if fleet_sort == 'count' %}{% if fleet_dir == 'desc' %}▼{% else %}▲{% endif %}{% else %}↕{% endif %}</a></th>
           <th>Fleet Share</th>
           <th>Operational Status</th>
           <th>AI Query Action</th>
         </tr>
       </thead>
       <tbody>
-        {% for m in real_data.top_vehicle_models %}
+        {% for m in fleet_pagination.items %}
         <tr>
           <td style="font-weight: 700; color: var(--text-primary);">{{ m.make }}</td>
           <td><strong>{{ m.model }}</strong></td>
@@ -299,9 +350,97 @@
             </a>
           </td>
         </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No matching fleet models found for "{{ fleet_q }}".</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <!-- Backend Pagination Footer -->
+  <div class="table-pagination-footer">
+    <div class="table-info-counter">
+      Showing <strong>{{ fleet_pagination.start_index }}</strong> to <strong>{{ fleet_pagination.end_index }}</strong> of <strong>{{ fleet_pagination.total_records }}</strong> models
+    </div>
+    <div class="table-pagination-nav">
+      {% if fleet_pagination.has_previous %}
+        <a href="?range={{ time_range }}&page={{ fleet_pagination.previous_page_number }}&page_size={{ fleet_page_size }}&q={{ fleet_q }}&sort_by={{ fleet_sort }}&sort_dir={{ fleet_dir }}" class="page-nav-btn">‹ Prev</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>‹ Prev</button>
+      {% endif %}
+
+      {% for p in fleet_pagination.page_range %}
+        {% if p == fleet_pagination.page %}
+          <button class="page-num-btn active">{{ p }}</button>
+        {% else %}
+          <a href="?range={{ time_range }}&page={{ p }}&page_size={{ fleet_page_size }}&q={{ fleet_q }}&sort_by={{ fleet_sort }}&sort_dir={{ fleet_dir }}" class="page-num-btn">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if fleet_pagination.has_next %}
+        <a href="?range={{ time_range }}&page={{ fleet_pagination.next_page_number }}&page_size={{ fleet_page_size }}&q={{ fleet_q }}&sort_by={{ fleet_sort }}&sort_dir={{ fleet_dir }}" class="page-nav-btn">Next ›</a>
+      {% else %}
+        <button class="page-nav-btn disabled" disabled>Next ›</button>
+      {% endif %}
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const lineCtx = document.getElementById("homePaymentTrendsChart");
+  if (lineCtx) {
+    const ctx = lineCtx.getContext("2d");
+    const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+    gradient.addColorStop(0, "rgba(204, 255, 0, 0.45)");
+    gradient.addColorStop(1, "rgba(204, 255, 0, 0.0)");
+
+    new Chart(lineCtx, {
+      type: "line",
+      data: {
+        labels: {{ home_chart.labels|safe }},
+        datasets: [{
+          label: "Collections ($ USD)",
+          data: {{ home_chart.values|safe }},
+          borderColor: "#ccff00",
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.35,
+          borderWidth: 3,
+          pointBackgroundColor: "#ccff00",
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (item) => ` Collections: $${item.parsed.y.toLocaleString()} USD`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 12 } } },
+          y: {
+            grid: { color: "rgba(255,255,255,0.06)" },
+            ticks: {
+              color: "#8e9da8",
+              font: { size: 12 },
+              callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
+            }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

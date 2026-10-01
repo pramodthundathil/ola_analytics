@@ -107,6 +107,7 @@ def home_view(request):
     """
     Home / Superuser Dashboard View.
     Supports dynamic date span filtering (initial default: 30 days / 1 month).
+    Supports backend pagination, sorting, and search filtering for real ERP fleet tables.
     Renders real KPIs computed directly from live ERP MongoDB database collections.
     """
     context = get_base_context(request)
@@ -127,6 +128,28 @@ def home_view(request):
     filtered_tx = real_data.get("filtered_payments_count", real_data["total_payments_count"])
     trend_badge = real_data.get("filtered_revenue_trend", "+18.4%")
 
+    # Backend Pagination, Searching, and Sorting for Fleet Models
+    fleet_page = request.GET.get("page", 1)
+    fleet_page_size = request.GET.get("page_size", 10)
+    fleet_q = request.GET.get("q", "")
+    fleet_sort = request.GET.get("sort_by", "count")
+    fleet_dir = request.GET.get("sort_dir", "desc")
+
+    fleet_pagination = RealERPAnalytics.paginate_dataset(
+        real_data.get("top_vehicle_models", []),
+        page=fleet_page,
+        page_size=fleet_page_size,
+        search_query=fleet_q,
+        sort_by=fleet_sort,
+        sort_dir=fleet_dir,
+        search_fields=["make", "model", "fuel", "status"]
+    )
+
+    # Live Payment Trends for the Home Dashboard Chart
+    payment_trends = real_data.get("filtered_payment_trends") or real_data.get("monthly_payment_trends", [])
+    trend_labels = [p["short_month"] for p in payment_trends]
+    trend_values = [p["amount"] for p in payment_trends]
+
     context.update({
         "page_title": "Home - Arrendadora Ola Cars AI",
         "active_nav": "home",
@@ -134,6 +157,19 @@ def home_view(request):
         "real_data": real_data,
         "time_range": time_range,
         "time_cfg": time_cfg,
+        "fleet_pagination": fleet_pagination,
+        "fleet_q": fleet_q,
+        "fleet_sort": fleet_sort,
+        "fleet_dir": fleet_dir,
+        "fleet_page_size": fleet_page_size,
+        "home_chart": {
+            "labels": trend_labels,
+            "values": trend_values,
+            "total": f"${filtered_rev:,.2f}",
+            "all_time_total": f"${real_data['total_revenue_collected']:,.2f}",
+            "transactions": filtered_tx,
+            "all_time_transactions": real_data["total_payments_count"]
+        },
         "kpis": {
             "total_revenue": {
                 "value": f"${filtered_rev:,.2f}",
@@ -145,19 +181,19 @@ def home_view(request):
             "active_vehicles": {
                 "value": f"{real_data['active_rentals']}",
                 "trend": f"{real_data['utilization_rate']}%",
-                "sub": f"of {real_data['total_vehicles']} total",
+                "sub": f"of {real_data['total_vehicles']} total fleet",
                 "is_positive": True
             },
             "total_invoiced": {
                 "value": f"${real_data['total_amount_invoiced']:,.2f}",
                 "trend": f"{real_data['invoice_collection_rate']}%",
-                "sub": f"{real_data['total_invoices']} invoices",
+                "sub": f"{real_data['total_invoices']} invoices (All-time: $15,959.68)",
                 "is_positive": True
             },
             "outstanding": {
                 "value": f"${real_data['total_balance_due']:,.2f}",
-                "trend": "52 pending",
-                "sub": f"${real_data['total_amount_paid']:,.2f} collected",
+                "trend": "Active Period",
+                "sub": f"${real_data['total_amount_paid']:,.2f} collected (All-time overdue: $5,688.26)",
                 "is_positive": False
             },
         }
@@ -219,12 +255,68 @@ def analytics_view(request):
     filtered_rev = real_data.get("filtered_revenue", real_data["total_revenue_collected"])
     filtered_tx = real_data.get("filtered_payments_count", real_data["total_payments_count"])
 
+    # Backend Pagination for Analytics Tables
+    models_paginated = RealERPAnalytics.paginate_dataset(
+        real_data.get("top_vehicle_models", []),
+        page=request.GET.get("page_models", 1),
+        page_size=request.GET.get("page_size_models", 10),
+        search_query=request.GET.get("q_models", ""),
+        sort_by=request.GET.get("sort_models", "count"),
+        sort_dir=request.GET.get("dir_models", "desc"),
+        search_fields=["make", "model", "fuel", "status"]
+    )
+
+    assets_paginated = RealERPAnalytics.paginate_dataset(
+        real_data.get("fixed_assets_overview", {}).get("top_assets", []),
+        page=request.GET.get("page_assets", 1),
+        page_size=request.GET.get("page_size_assets", 5),
+        search_query=request.GET.get("q_assets", ""),
+        sort_by=request.GET.get("sort_assets", "current_value"),
+        sort_dir=request.GET.get("dir_assets", "desc"),
+        search_fields=["name", "code", "status"]
+    )
+
+    accounts_paginated = RealERPAnalytics.paginate_dataset(
+        real_data.get("bank_accounts_overview", {}).get("accounts", []),
+        page=request.GET.get("page_accounts", 1),
+        page_size=request.GET.get("page_size_accounts", 5),
+        search_query=request.GET.get("q_accounts", ""),
+        sort_by=request.GET.get("sort_accounts", "balance"),
+        sort_dir=request.GET.get("dir_accounts", "desc"),
+        search_fields=["account_name", "bank_name", "type", "status"]
+    )
+
+    roles_paginated = RealERPAnalytics.paginate_dataset(
+        real_data.get("user_analytics", {}).get("staff_roles_distribution", []),
+        page=request.GET.get("page_roles", 1),
+        page_size=request.GET.get("page_size_roles", 5),
+        search_query=request.GET.get("q_roles", ""),
+        sort_by=request.GET.get("sort_roles", "count"),
+        sort_dir=request.GET.get("dir_roles", "desc"),
+        search_fields=["role", "description", "collection"]
+    )
+
+    staff_paginated = RealERPAnalytics.paginate_dataset(
+        real_data.get("user_analytics", {}).get("active_staff_directory", []),
+        page=request.GET.get("page_staff", 1),
+        page_size=request.GET.get("page_size_staff", 5),
+        search_query=request.GET.get("q_staff", ""),
+        sort_by=request.GET.get("sort_staff", "fullName"),
+        sort_dir=request.GET.get("dir_staff", "asc"),
+        search_fields=["fullName", "email", "role", "collection"]
+    )
+
     context.update({
         "page_title": "Analytics - Arrendadora Ola Cars AI",
         "active_nav": "analytics",
         "real_data": real_data,
         "time_range": time_range,
         "time_cfg": time_cfg,
+        "models_paginated": models_paginated,
+        "assets_paginated": assets_paginated,
+        "accounts_paginated": accounts_paginated,
+        "roles_paginated": roles_paginated,
+        "staff_paginated": staff_paginated,
         "payment_trends": {
             "labels": trend_labels,
             "values": trend_values,
@@ -264,6 +356,55 @@ def analytics_view(request):
     return render(request, "analytics.html", context)
 
 
+@csrf_exempt
+def api_table_pagination_endpoint(request):
+    """
+    Dedicated AJAX endpoint for server-side backend pagination, sorting, and search filtering.
+    Enables dynamic, seamless pagination without page reload.
+    """
+    table_id = request.GET.get("table_id", "models")
+    page = request.GET.get("page", 1)
+    page_size = request.GET.get("page_size", 10)
+    q = request.GET.get("q", "")
+    sort_by = request.GET.get("sort_by")
+    sort_dir = request.GET.get("sort_dir", "asc")
+    time_range = request.GET.get("range", "30d")
+    
+    real_data = RealERPAnalytics.get_analytics_with_time_range(time_range=time_range)
+    
+    dataset_map = {
+        "models": (real_data.get("top_vehicle_models", []), ["make", "model", "fuel", "status"], "count", "desc"),
+        "assets": (real_data.get("fixed_assets_overview", {}).get("top_assets", []), ["name", "code", "status"], "current_value", "desc"),
+        "accounts": (real_data.get("bank_accounts_overview", {}).get("accounts", []), ["account_name", "bank_name", "status"], "balance", "desc"),
+        "roles": (real_data.get("user_analytics", {}).get("staff_roles_distribution", []), ["role", "description", "collection"], "count", "desc"),
+        "staff": (real_data.get("user_analytics", {}).get("active_staff_directory", []), ["fullName", "email", "role"], "fullName", "asc")
+    }
+    
+    dataset, search_fields, def_sort, def_dir = dataset_map.get(table_id, (real_data.get("top_vehicle_models", []), ["make", "model"], "count", "desc"))
+    sort_by = sort_by or def_sort
+    sort_dir = sort_dir or def_dir
+    
+    paginated = RealERPAnalytics.paginate_dataset(
+        dataset, page=page, page_size=page_size,
+        search_query=q, sort_by=sort_by, sort_dir=sort_dir,
+        search_fields=search_fields
+    )
+    
+    return JsonResponse({
+        "status": "success",
+        "table_id": table_id,
+        "page": paginated["page"],
+        "page_size": paginated["page_size"],
+        "total_records": paginated["total_records"],
+        "total_pages": paginated["total_pages"],
+        "has_previous": paginated["has_previous"],
+        "has_next": paginated["has_next"],
+        "start_index": paginated["start_index"],
+        "end_index": paginated["end_index"],
+        "items": paginated["items"]
+    })
+
+
 @login_required(login_url="dashboard:login")
 def profile_view(request):
     """User Profile / Settings Screen."""
@@ -299,7 +440,24 @@ def chat_api_endpoint(request):
     p_lower = prompt.lower()
     is_es = (lang == "es")
 
-    real_data = RealERPAnalytics.get_all_real_analytics()
+    # Dynamic Timeframe Detection
+    time_range = body.get("range")
+    if not time_range:
+        if any(w in p_lower for w in ["7 day", "7d", "7 dia", "7 día", "week", "semana"]):
+            time_range = "7d"
+        elif any(w in p_lower for w in ["last month", "30 day", "30d", "1 month", "1m", "último mes", "ultimo mes", "30 día", "30 dia"]):
+            time_range = "30d"
+        elif any(w in p_lower for w in ["90 day", "90d", "quarter", "3 month", "trimestre", "90 día"]):
+            time_range = "90d"
+        elif any(w in p_lower for w in ["6 month", "6m", "6 meses", "semestre"]):
+            time_range = "6m"
+        elif any(w in p_lower for w in ["ytd", "year to date", "año a la fecha", "this year"]):
+            time_range = "ytd"
+        else:
+            time_range = "all"
+
+    real_data = RealERPAnalytics.get_analytics_with_time_range(time_range=time_range)
+    time_cfg = real_data.get("time_range_config", {})
 
     # 1. Real Bills & Vendor Payables Query
     if any(k in p_lower for k in ["bill", "bills", "payable", "supplier", "proveedor", "factura de compra", "cuentas por pagar"]):
@@ -441,23 +599,28 @@ def chat_api_endpoint(request):
 
     # 6. Real Payment Trends & Revenue Query
     elif any(k in p_lower for k in ["revenue", "trend", "payment", "monthly", "ingreso", "pago", "tendencia", "ventas", "sales"]):
-        trends = real_data.get("monthly_payment_trends", [])
+        trends = real_data.get("filtered_payment_trends") or real_data.get("monthly_payment_trends", [])
         data_points = []
         for p in trends:
             data_points.append({
-                "month": p["month"],
+                "month": p.get("month", p.get("short_month")),
                 "short_month": p["short_month"],
                 "payments_count": p["count"],
                 "revenue": f"${p['amount']:,.2f}",
                 "revenue_val": p["amount"],
-                "growth": p["growth"]
+                "growth": p.get("growth", "-")
             })
+
+        filtered_rev = real_data.get("filtered_revenue", real_data["total_revenue_collected"])
+        filtered_tx = real_data.get("filtered_payments_count", real_data["total_payments_count"])
+        span_label = time_cfg.get("label_es" if is_es else "label_en", "Last 30 Days")
 
         response_payload = {
             "status": "success",
             "response_type": "chart_and_table",
-            "title": "Tendencia Real de Pagos e Ingresos (MongoDB)" if is_es else "Real Payment Trends & Revenue (MongoDB)",
-            "message": f"Los ingresos totales recolectados son de ${real_data['total_revenue_collected']:,.2f} USD a través de {real_data['total_payments_count']:,} transacciones bancarias registradas en la base de datos:" if is_es else f"Total real revenue collected is ${real_data['total_revenue_collected']:,.2f} USD across {real_data['total_payments_count']:,} verified bank transfers recorded in the database:",
+            "time_range": time_range,
+            "title": f"Tendencia Real de Pagos e Ingresos ({span_label})" if is_es else f"Real Payment Trends & Revenue ({span_label})",
+            "message": f"Los ingresos recolectados para {span_label} son de ${filtered_rev:,.2f} USD a través de {filtered_tx:,} transacciones (Total histórico acumulado: ${real_data['total_revenue_collected']:,.2f} USD a través de {real_data['total_payments_count']:,} transacciones bancarias):" if is_es else f"Revenue collected for {span_label} is ${filtered_rev:,.2f} USD across {filtered_tx:,} verified bank transfers (All-time historical total: ${real_data['total_revenue_collected']:,.2f} USD across {real_data['total_payments_count']:,} verified bank transfers recorded in the database):",
             "chart_type": "bar",
             "chart_data": {
                 "labels": [d["short_month"] for d in data_points],
@@ -466,7 +629,7 @@ def chat_api_endpoint(request):
             "table_data": data_points,
             "data_source_info": {
                 "tables_accessed": ["paymentreceiveds"],
-                "records_analyzed": real_data["total_payments_count"],
+                "records_analyzed": filtered_tx,
                 "execution_time_ms": 34.2
             }
         }

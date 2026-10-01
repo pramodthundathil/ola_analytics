@@ -22,14 +22,23 @@ const OlaApp = {
   initSidebarToggle() {
     const toggleBtn = document.getElementById("sidebar-toggle");
     const sidebar = document.getElementById("app-sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
     if (toggleBtn && sidebar) {
       toggleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        sidebar.classList.toggle("sidebar-open");
+        const isOpen = sidebar.classList.toggle("sidebar-open");
+        if (backdrop) backdrop.classList.toggle("active", isOpen);
       });
+      if (backdrop) {
+        backdrop.addEventListener("click", () => {
+          sidebar.classList.remove("sidebar-open");
+          backdrop.classList.remove("active");
+        });
+      }
       document.addEventListener("click", (e) => {
         if (sidebar.classList.contains("sidebar-open") && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
           sidebar.classList.remove("sidebar-open");
+          if (backdrop) backdrop.classList.remove("active");
         }
       });
     }

@@ -32,9 +32,21 @@ class EnterpriseTableManager {
   }
 
   init() {
+    if (this.table.dataset.backend === "true") {
+      this.initBackendTable();
+      return;
+    }
     this.createControlsToolbar();
     this.setupSorting();
     this.render();
+  }
+
+  initBackendTable() {
+    // For backend tables, enable sorting on headers without breaking GET links
+    const headers = this.table.querySelectorAll("thead th.sortable-th");
+    headers.forEach((th) => {
+      th.setAttribute("title", "Click to sort (server-side)");
+    });
   }
 
   createControlsToolbar() {
@@ -332,13 +344,17 @@ class EnterpriseTableManager {
   }
 }
 
-// Auto-initialize on all tables with class `.enterprise-table`
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".enterprise-table").forEach((tbl) => {
-    // Avoid double init
+window.EnterpriseTableManager = EnterpriseTableManager;
+window.initEnterpriseTables = function(container = document) {
+  container.querySelectorAll(".enterprise-table").forEach((tbl) => {
     if (!tbl.dataset.tableManaged) {
       tbl.dataset.tableManaged = "true";
       new EnterpriseTableManager(tbl);
     }
   });
+};
+
+// Auto-initialize on DOM ready
+document.addEventListener("DOMContentLoaded", () => {
+  window.initEnterpriseTables();
 });

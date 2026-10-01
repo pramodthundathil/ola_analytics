@@ -16,4 +16,5 @@ urlpatterns = [
     path("profile/", views.profile_view, name="profile"),
     path("set-language/", views.set_language_view, name="set_language"),
     path("api/chat/", views.chat_api_endpoint, name="chat_api"),
+    path("api/table-data/", views.api_table_pagination_endpoint, name="api_table_pagination"),
 ]

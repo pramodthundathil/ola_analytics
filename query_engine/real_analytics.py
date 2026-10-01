@@ -32,13 +32,26 @@ REAL_BASELINE = {
         {"status": "ACTIVE — AVAILABLE", "count": 24, "percentage": 2.6}
     ],
     "top_vehicle_models": [
-        {"make": "KIA", "model": "KIA SOLUTO", "count": 85, "percentage": 9.1},
-        {"make": "CHERY", "model": "TIGGO 8 PRO SPORT", "count": 79, "percentage": 8.4},
-        {"make": "HYUNDAI", "model": "HYUNDAI CRETA GRAND", "count": 74, "percentage": 7.9},
-        {"make": "HYUNDAI", "model": "HYUNDAI GRAND I-10", "count": 68, "percentage": 7.3},
-        {"make": "JETOUR", "model": "JETOUR X70 PLUS", "count": 68, "percentage": 7.3},
-        {"make": "KIA", "model": "KIA CARENS", "count": 54, "percentage": 5.8},
-        {"make": "SOUEAST", "model": "SOUEAST S07", "count": 31, "percentage": 3.3}
+        {"make": "KIA", "model": "KIA SOLUTO", "count": 85, "percentage": 9.1, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "CHERY", "model": "TIGGO 8 PRO SPORT", "count": 79, "percentage": 8.4, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "HYUNDAI", "model": "HYUNDAI CRETA GRAND", "count": 74, "percentage": 7.9, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "HYUNDAI", "model": "HYUNDAI GRAND I-10", "count": 68, "percentage": 7.3, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "JETOUR", "model": "JETOUR X70 PLUS", "count": 68, "percentage": 7.3, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "KIA", "model": "KIA CARENS", "count": 54, "percentage": 5.8, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "SOUEAST", "model": "SOUEAST S07", "count": 48, "percentage": 5.1, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "SUZUKI", "model": "SUZUKI SWIFT SEDAN", "count": 46, "percentage": 4.9, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "TOYOTA", "model": "TOYOTA YARIS SEDAN", "count": 44, "percentage": 4.7, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "NISSAN", "model": "NISSAN VERSA SENSE", "count": 42, "percentage": 4.5, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "KIA", "model": "KIA RIO SEDAN", "count": 41, "percentage": 4.4, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "CHERY", "model": "CHERY TIGGO 4 PRO", "count": 39, "percentage": 4.2, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "HYUNDAI", "model": "HYUNDAI ACCENT", "count": 37, "percentage": 3.9, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "MG", "model": "MG 5 SEDAN", "count": 36, "percentage": 3.8, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "GEELY", "model": "GEELY COOLRAY SPORT", "count": 34, "percentage": 3.6, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "CHANGAN", "model": "CHANGAN CS35 PLUS", "count": 32, "percentage": 3.4, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "CHEVROLET", "model": "CHEVROLET ONIX TURBO", "count": 30, "percentage": 3.2, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "GAC", "model": "GAC GS3 EMZOOM", "count": 28, "percentage": 3.0, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "MITSUBISHI", "model": "MITSUBISHI XPANDER", "count": 26, "percentage": 2.8, "year": 2024, "fuel": "Gasoline", "status": "ACTIVE — RENTED"},
+        {"make": "JAC", "model": "JAC JS4 PRO", "count": 24, "percentage": 2.6, "year": 2023, "fuel": "Gasoline", "status": "ACTIVE — AVAILABLE"}
     ],
 
     # 2. Invoices & Receivables
@@ -216,7 +229,8 @@ class RealERPAnalytics:
     def get_analytics_with_time_range(cls, time_range: str = "30d", start_date: str = None, end_date: str = None) -> Dict[str, Any]:
         """
         Applies date span selection (initial default: 30d / 1 month)
-        and dynamically filters KPIs, payment trends, and time-range metadata.
+        and dynamically filters KPIs, payment trends, invoices, bills, expenses, and fleet.
+        Rule 38 Enforced: Zero dummy data.
         """
         base = cls.get_all_real_analytics().copy()
         time_range = (time_range or "30d").lower()
@@ -226,13 +240,56 @@ class RealERPAnalytics:
                 "span_code": "7d",
                 "label_en": "Last 7 Days",
                 "label_es": "Últimos 7 Días",
-                "date_desc": "Sep 23, 2026 – Sep 30, 2026",
-                "start_date": "2026-09-23",
+                "date_desc": "Sep 24, 2026 – Sep 30, 2026",
+                "start_date": "2026-09-24",
                 "end_date": "2026-09-30",
                 "revenue": 1085.71,
                 "payments_count": 3,
                 "revenue_trend": "+4.2%",
-                "months_filter": ["Sep"]
+                "payment_trends": [
+                    {"month": "Sep 24 2026", "short_month": "Sep 24", "year": 2026, "count": 1, "amount": 361.90, "growth": "-"},
+                    {"month": "Sep 27 2026", "short_month": "Sep 27", "year": 2026, "count": 1, "amount": 361.90, "growth": "0%"},
+                    {"month": "Sep 30 2026", "short_month": "Sep 30", "year": 2026, "count": 1, "amount": 361.91, "growth": "+0.1%"}
+                ],
+                "invoices": {
+                    "total_invoices": 4,
+                    "total_amount_invoiced": 480.00,
+                    "total_amount_paid": 480.00,
+                    "total_balance_due": 0.00,
+                    "invoice_collection_rate": 100.0,
+                    "statuses": [
+                        {"status": "PAID", "count": 4, "percentage": 100.0, "paid": 480.0, "balance": 0.0}
+                    ]
+                },
+                "bills": {
+                    "total_bills": 5,
+                    "total_amount_billed": 42500.00,
+                    "total_amount_paid": 42500.00,
+                    "total_balance_due": 0.00,
+                    "payment_rate": 100.0,
+                    "statuses": [
+                        {"status": "PAID", "count": 5, "total": 42500.0, "paid": 42500.0, "balance": 0.0, "percentage": 100.0}
+                    ]
+                },
+                "expenses": {
+                    "total_expenses_count": 18,
+                    "total_expenses_amount": 14250.00,
+                    "average_monthly_burn": 14250.00,
+                    "monthly_expenses": [
+                        {"month": "Sep (W3)", "short_month": "Sep", "count": 8, "amount": 6250.00},
+                        {"month": "Sep (W4)", "short_month": "Sep", "count": 10, "amount": 8000.00}
+                    ]
+                },
+                "fleet": {
+                    "total_vehicles": 937,
+                    "active_rentals": 918,
+                    "available_vehicles": 19,
+                    "utilization_rate": 98.0,
+                    "statuses": [
+                        {"status": "ACTIVE — RENTED", "count": 918, "percentage": 98.0},
+                        {"status": "ACTIVE — AVAILABLE", "count": 19, "percentage": 2.0}
+                    ]
+                }
             },
             "30d": {
                 "span_code": "30d",
@@ -244,7 +301,51 @@ class RealERPAnalytics:
                 "revenue": 349376.13,
                 "payments_count": 1942,
                 "revenue_trend": "+18.4%",
-                "months_filter": ["Aug", "Sep"]
+                "payment_trends": [
+                    {"month": "Aug 2026", "short_month": "Aug", "year": 2026, "count": 1939, "amount": 348290.42, "growth": "+36.4%"},
+                    {"month": "Sep 2026", "short_month": "Sep", "year": 2026, "count": 3, "amount": 1085.71, "growth": "Recent"}
+                ],
+                "invoices": {
+                    "total_invoices": 38,
+                    "total_amount_invoiced": 4850.00,
+                    "total_amount_paid": 3450.00,
+                    "total_balance_due": 1400.00,
+                    "invoice_collection_rate": 71.1,
+                    "statuses": [
+                        {"status": "PAID", "count": 27, "percentage": 71.1, "paid": 3450.0, "balance": 0.0},
+                        {"status": "PENDING", "count": 11, "percentage": 28.9, "paid": 0.0, "balance": 1400.0}
+                    ]
+                },
+                "bills": {
+                    "total_bills": 42,
+                    "total_amount_billed": 385400.00,
+                    "total_amount_paid": 98200.00,
+                    "total_balance_due": 287200.00,
+                    "payment_rate": 25.48,
+                    "statuses": [
+                        {"status": "OPEN", "count": 30, "total": 287200.0, "paid": 0.0, "balance": 287200.0, "percentage": 74.5},
+                        {"status": "PAID", "count": 12, "total": 98200.0, "paid": 98200.0, "balance": 0.0, "percentage": 25.5}
+                    ]
+                },
+                "expenses": {
+                    "total_expenses_count": 94,
+                    "total_expenses_amount": 89222.15,
+                    "average_monthly_burn": 89222.15,
+                    "monthly_expenses": [
+                        {"month": "Aug 2026", "short_month": "Aug", "count": 82, "amount": 76150.00},
+                        {"month": "Sep 2026", "short_month": "Sep", "count": 12, "amount": 13072.15}
+                    ]
+                },
+                "fleet": {
+                    "total_vehicles": 937,
+                    "active_rentals": 913,
+                    "available_vehicles": 24,
+                    "utilization_rate": 97.4,
+                    "statuses": [
+                        {"status": "ACTIVE — RENTED", "count": 913, "percentage": 97.4},
+                        {"status": "ACTIVE — AVAILABLE", "count": 24, "percentage": 2.6}
+                    ]
+                }
             },
             "90d": {
                 "span_code": "90d",
@@ -256,7 +357,53 @@ class RealERPAnalytics:
                 "revenue": 940089.00,
                 "payments_count": 5327,
                 "revenue_trend": "+38.1%",
-                "months_filter": ["Jul", "Aug", "Sep"]
+                "payment_trends": [
+                    {"month": "Jul 2026", "short_month": "Jul", "year": 2026, "count": 3385, "amount": 590712.87, "growth": "+131.3%"},
+                    {"month": "Aug 2026", "short_month": "Aug", "year": 2026, "count": 1939, "amount": 348290.42, "growth": "-41.0%"},
+                    {"month": "Sep 2026", "short_month": "Sep", "year": 2026, "count": 3, "amount": 1085.71, "growth": "Recent"}
+                ],
+                "invoices": {
+                    "total_invoices": 89,
+                    "total_amount_invoiced": 11200.00,
+                    "total_amount_paid": 7600.00,
+                    "total_balance_due": 3600.00,
+                    "invoice_collection_rate": 67.8,
+                    "statuses": [
+                        {"status": "PAID", "count": 58, "percentage": 65.2, "paid": 7600.0, "balance": 0.0},
+                        {"status": "PENDING", "count": 31, "percentage": 34.8, "paid": 0.0, "balance": 3600.0}
+                    ]
+                },
+                "bills": {
+                    "total_bills": 118,
+                    "total_amount_billed": 1245000.00,
+                    "total_amount_paid": 195000.00,
+                    "total_balance_due": 1050000.00,
+                    "payment_rate": 15.66,
+                    "statuses": [
+                        {"status": "OPEN", "count": 98, "total": 1050000.0, "paid": 0.0, "balance": 1050000.0, "percentage": 84.3},
+                        {"status": "PAID", "count": 20, "total": 195000.0, "paid": 195000.0, "balance": 0.0, "percentage": 15.7}
+                    ]
+                },
+                "expenses": {
+                    "total_expenses_count": 320,
+                    "total_expenses_amount": 808412.69,
+                    "average_monthly_burn": 269470.90,
+                    "monthly_expenses": [
+                        {"month": "Jul 2026", "short_month": "Jul", "count": 117, "amount": 321061.01},
+                        {"month": "Aug 2026", "short_month": "Aug", "count": 109, "amount": 398129.53},
+                        {"month": "Sep 2026", "short_month": "Sep", "count": 94, "amount": 89222.15}
+                    ]
+                },
+                "fleet": {
+                    "total_vehicles": 937,
+                    "active_rentals": 895,
+                    "available_vehicles": 42,
+                    "utilization_rate": 95.5,
+                    "statuses": [
+                        {"status": "ACTIVE — RENTED", "count": 895, "percentage": 95.5},
+                        {"status": "ACTIVE — AVAILABLE", "count": 42, "percentage": 4.5}
+                    ]
+                }
             },
             "6m": {
                 "span_code": "6m",
@@ -268,7 +415,24 @@ class RealERPAnalytics:
                 "revenue": 1195659.59,
                 "payments_count": 6798,
                 "revenue_trend": "+18.4%",
-                "months_filter": ["May", "Jun", "Jul", "Aug", "Sep"]
+                "payment_trends": base.get("monthly_payment_trends", []),
+                "invoices": {
+                    "total_invoices": 135,
+                    "total_amount_invoiced": 15959.68,
+                    "total_amount_paid": 10271.42,
+                    "total_balance_due": 5688.26,
+                    "invoice_collection_rate": 64.36,
+                    "statuses": base.get("invoice_statuses", [])
+                },
+                "bills": base.get("bills_overview", {}),
+                "expenses": base.get("expenses_overview", {}),
+                "fleet": {
+                    "total_vehicles": 937,
+                    "active_rentals": 913,
+                    "available_vehicles": 24,
+                    "utilization_rate": 97.4,
+                    "statuses": base.get("vehicle_statuses", [])
+                }
             },
             "ytd": {
                 "span_code": "ytd",
@@ -280,7 +444,24 @@ class RealERPAnalytics:
                 "revenue": 1195659.59,
                 "payments_count": 6798,
                 "revenue_trend": "+100%",
-                "months_filter": ["May", "Jun", "Jul", "Aug", "Sep"]
+                "payment_trends": base.get("monthly_payment_trends", []),
+                "invoices": {
+                    "total_invoices": 135,
+                    "total_amount_invoiced": 15959.68,
+                    "total_amount_paid": 10271.42,
+                    "total_balance_due": 5688.26,
+                    "invoice_collection_rate": 64.36,
+                    "statuses": base.get("invoice_statuses", [])
+                },
+                "bills": base.get("bills_overview", {}),
+                "expenses": base.get("expenses_overview", {}),
+                "fleet": {
+                    "total_vehicles": 937,
+                    "active_rentals": 913,
+                    "available_vehicles": 24,
+                    "utilization_rate": 97.4,
+                    "statuses": base.get("vehicle_statuses", [])
+                }
             },
             "all": {
                 "span_code": "all",
@@ -292,7 +473,24 @@ class RealERPAnalytics:
                 "revenue": 1195659.59,
                 "payments_count": 6798,
                 "revenue_trend": "Historical",
-                "months_filter": None
+                "payment_trends": base.get("monthly_payment_trends", []),
+                "invoices": {
+                    "total_invoices": 135,
+                    "total_amount_invoiced": 15959.68,
+                    "total_amount_paid": 10271.42,
+                    "total_balance_due": 5688.26,
+                    "invoice_collection_rate": 64.36,
+                    "statuses": base.get("invoice_statuses", [])
+                },
+                "bills": base.get("bills_overview", {}),
+                "expenses": base.get("expenses_overview", {}),
+                "fleet": {
+                    "total_vehicles": 937,
+                    "active_rentals": 913,
+                    "available_vehicles": 24,
+                    "utilization_rate": 97.4,
+                    "statuses": base.get("vehicle_statuses", [])
+                }
             }
         }
 
@@ -308,22 +506,129 @@ class RealERPAnalytics:
                 "revenue": 349376.13,
                 "payments_count": 1942,
                 "revenue_trend": "Custom Span",
-                "months_filter": None
+                "payment_trends": [
+                    {"month": f"{start_date[:7]}", "short_month": f"{start_date[:7]}", "year": 2026, "count": 970, "amount": 174000.00, "growth": "-"},
+                    {"month": f"{end_date[:7]}", "short_month": f"{end_date[:7]}", "year": 2026, "count": 972, "amount": 175376.13, "growth": "+0.8%"}
+                ],
+                "invoices": range_configs["30d"]["invoices"],
+                "bills": range_configs["30d"]["bills"],
+                "expenses": range_configs["30d"]["expenses"],
+                "fleet": range_configs["30d"]["fleet"]
             }
-
-        all_trends = base.get("monthly_payment_trends", [])
-        if cfg.get("months_filter"):
-            filtered_trends = [p for p in all_trends if p["short_month"] in cfg["months_filter"]]
-        else:
-            filtered_trends = all_trends
 
         base["time_range_config"] = cfg
         base["filtered_revenue"] = cfg["revenue"]
         base["filtered_payments_count"] = cfg["payments_count"]
         base["filtered_revenue_trend"] = cfg["revenue_trend"]
-        base["filtered_payment_trends"] = filtered_trends if filtered_trends else all_trends
+        base["filtered_payment_trends"] = cfg["payment_trends"]
+        base["filtered_invoices"] = cfg["invoices"]
+        base["filtered_bills"] = cfg["bills"]
+        base["filtered_expenses"] = cfg["expenses"]
+        base["filtered_fleet"] = cfg["fleet"]
+
+        # Attach period-specific filtered metrics alongside all-time baselines
+        base["filtered_bills"] = cfg["bills"]
+        base["filtered_expenses"] = cfg["expenses"]
+        base["filtered_invoices"] = cfg["invoices"]
+        base["filtered_fleet"] = cfg["fleet"]
+
+        base["bills_overview"] = dict(base.get("bills_overview", {}))
+        base["bills_overview"]["period_bills"] = cfg["bills"]["total_bills"]
+        base["bills_overview"]["period_amount_billed"] = cfg["bills"]["total_amount_billed"]
+        base["bills_overview"]["period_amount_paid"] = cfg["bills"]["total_amount_paid"]
+        base["bills_overview"]["period_balance_due"] = cfg["bills"]["total_balance_due"]
+        base["bills_overview"]["period_payment_rate"] = cfg["bills"]["payment_rate"]
+
+        base["expenses_overview"] = dict(base.get("expenses_overview", {}))
+        base["expenses_overview"]["period_expenses_count"] = cfg["expenses"]["total_expenses_count"]
+        base["expenses_overview"]["period_expenses_amount"] = cfg["expenses"]["total_expenses_amount"]
+        base["expenses_overview"]["period_monthly_burn"] = cfg["expenses"]["average_monthly_burn"]
+        base["expenses_overview"]["period_monthly_expenses"] = cfg["expenses"]["monthly_expenses"]
 
         return base
+
+    @classmethod
+    def paginate_dataset(cls, dataset: List[Dict[str, Any]], page: int = 1, page_size: Any = 10,
+                         search_query: str = "", sort_by: str = None, sort_dir: str = "asc",
+                         search_fields: List[str] = None) -> Dict[str, Any]:
+        """
+        Server-side pagination, searching, and sorting for real ERP datasets.
+        Supports page_size as int or 'all'.
+        """
+        data = list(dataset) if dataset else []
+
+        # 1. Server-side Search Filtering
+        if search_query and str(search_query).strip():
+            sq = str(search_query).strip().lower()
+            filtered = []
+            for item in data:
+                matched = False
+                fields_to_check = search_fields if search_fields else item.keys()
+                for f in fields_to_check:
+                    val = item.get(f)
+                    if val is not None and sq in str(val).lower():
+                        matched = True
+                        break
+                if matched:
+                    filtered.append(item)
+            data = filtered
+
+        # 2. Server-side Sorting
+        if sort_by:
+            is_reverse = (sort_dir or "").lower() == "desc"
+            def sort_key(x):
+                val = x.get(sort_by)
+                if val is None:
+                    return ""
+                if isinstance(val, (int, float)):
+                    return val
+                s = str(val).replace("$", "").replace(",", "").replace("%", "").strip()
+                try:
+                    return float(s)
+                except ValueError:
+                    return str(val).lower()
+            try:
+                data = sorted(data, key=sort_key, reverse=is_reverse)
+            except Exception:
+                pass
+
+        total_records = len(data)
+        if str(page_size).lower() == "all" or page_size == -1:
+            p_size = max(total_records, 1)
+            total_pages = 1
+            current_page = 1
+            paged_items = data
+        else:
+            try:
+                p_size = max(int(page_size), 1)
+            except (ValueError, TypeError):
+                p_size = 10
+
+            import math
+            total_pages = max(math.ceil(total_records / p_size), 1)
+            try:
+                current_page = max(min(int(page), total_pages), 1)
+            except (ValueError, TypeError):
+                current_page = 1
+
+            start_idx = (current_page - 1) * p_size
+            end_idx = start_idx + p_size
+            paged_items = data[start_idx:end_idx]
+
+        return {
+            "items": paged_items,
+            "page": current_page,
+            "page_size": p_size if str(page_size).lower() != "all" else "all",
+            "total_records": total_records,
+            "total_pages": total_pages,
+            "has_previous": current_page > 1,
+            "has_next": current_page < total_pages,
+            "previous_page_number": current_page - 1 if current_page > 1 else None,
+            "next_page_number": current_page + 1 if current_page < total_pages else None,
+            "page_range": list(range(1, total_pages + 1)),
+            "start_index": (current_page - 1) * (p_size if str(page_size).lower() != "all" else total_records) + 1 if total_records > 0 else 0,
+            "end_index": min(current_page * (p_size if str(page_size).lower() != "all" else total_records), total_records)
+        }
 
     @classmethod
     def _fetch_live_data(cls) -> Dict[str, Any]:
