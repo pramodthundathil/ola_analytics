@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ t.ai_assistant_title }} - Arrendadora Ola Cars AI Superuser{% endblock %}
+{% block breadcrumb %}{{ t.nav_chat }}{% endblock %}
+
+{% block content %}
+<div class="ai-chat-workspace">
+  
+  <!-- Left Side: Query Library & Session Panel -->
+  <aside class="chat-sidebar-pane">
+    <button type="button" class="btn-new-query" onclick="clearChatMessages()">
+      <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      <span>+ New AI Query</span>
+    </button>
+
+    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 10px;">
+      Query Templates
+    </div>
+
+    <!-- Suggested Business Prompt Templates -->
+    <div class="chat-prompt-library">
+      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_chart_revenue }}')">
+        <span style="font-size: 15px;">📊</span>
+        <span>{{ t.prompt_chart_revenue }}</span>
+      </button>
+
+      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_overdue }}')">
+        <span style="font-size: 15px;">⚠️</span>
+        <span>{{ t.prompt_overdue }}</span>
+      </button>
+
+      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_top_vehicles }}')">
+        <span style="font-size: 15px;">🚗</span>
+        <span>{{ t.prompt_top_vehicles }}</span>
+      </button>
+
+      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_last_month }}')">
+        <span style="font-size: 15px;">📅</span>
+        <span>{{ t.prompt_last_month }}</span>
+      </button>
+
+      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_new_registrations }}')">
+        <span style="font-size: 15px;">📝</span>
+        <span>{{ t.prompt_new_registrations }}</span>
+      </button>
+    </div>
+
+    <!-- Security Indicator -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; margin-top: 14px; font-size: 11px; color: var(--text-muted);">
+      <div style="color: var(--accent-lime); font-weight: 700; margin-bottom: 4px;">🔒 Read-Only Safety Layer</div>
+      QueryValidator active: 10s timeout, 1000 row limits, SELECT only.
+    </div>
+  </aside>
+
+  <!-- Right Side: Main Chat Canvas -->
+  <section class="chat-main-canvas">
+    
+    <!-- Chat Header Toolbar -->
+    <div style="height: 52px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 0 24px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">{{ t.ai_assistant_title }}</span>
+        <span style="font-size: 11px; color: var(--text-muted);">• Natural Language to Live Data</span>
+      </div>
+      <button type="button" class="btn-icon" style="height: 32px; font-size: 12px;" onclick="clearChatMessages()" title="Clear">
+        🗑️
+      </button>
+    </div>
+
+    <!-- Chat Messages Scroll Container -->
+    <div id="chat-messages" class="chat-thread-container">
+      
+      <!-- Greeting Banner -->
+      <div class="web-chat-bubble web-bubble-ai">
+        <div class="user-avatar" style="width: 38px; height: 38px;">🤖</div>
+        <div class="web-bubble-card">
+          <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">
+            {{ t.ai_greeting }}
+          </div>
+          <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+            Ask questions like <em>"Show me monthly revenue for the last 6 months with a chart"</em> or <em>"Which customers are overdue?"</em> in English or Spanish.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Query Input Bar -->
+    <form id="chat-form" class="web-chat-input-bar">
+      <div class="web-input-capsule">
+        <button type="button" id="mic-btn" style="background: transparent; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);" title="Microphone Voice Input">
+          🎤
+        </button>
+        <input type="text" id="chat-input" placeholder="{{ t.chat_followup_placeholder }}" autocomplete="off" required>
+      </div>
+      <button type="submit" class="web-send-btn" aria-label="Send Query">
+        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </form>
+
+  </section>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let chartCounter = 0;
+
+function scrollToBottom() {
+  const container = document.getElementById("chat-messages");
+  if (container) container.scrollTop = container.scrollHeight;
+}
+
+function clearChatMessages() {
+  const container = document.getElementById("chat-messages");
+  container.innerHTML = `
+    <div class="web-chat-bubble web-bubble-ai">
+      <div class="user-avatar" style="width: 38px; height: 38px;">🤖</div>
+      <div class="web-bubble-card">
+        <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">
+          {{ t.ai_greeting }}
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary);">
+          Ask anything about your business data in English or Spanish.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function appendUserMessage(text) {
+  const container = document.getElementById("chat-messages");
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const bubble = document.createElement("div");
+  bubble.className = "web-chat-bubble web-bubble-user";
+  bubble.innerHTML = `
+    <div class="user-avatar" style="width: 38px; height: 38px; background: #334155;">👤</div>
+    <div class="web-bubble-card">
+      <div>${escapeHtml(text)}</div>
+      <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: right;">${timeStr}</div>
+    </div>
+  `;
+  container.appendChild(bubble);
+  scrollToBottom();
+}
+
+function appendTypingIndicator() {
+  const container = document.getElementById("chat-messages");
+  const typing = document.createElement("div");
+  typing.id = "typing-bubble";
+  typing.className = "web-chat-bubble web-bubble-ai";
+  typing.innerHTML = `
+    <div class="user-avatar" style="width: 38px; height: 38px;">⚡</div>
+    <div class="web-bubble-card" style="color: var(--accent-lime); font-size: 13px;">
+      <span>{{ t.server_initializing }}</span>
+    </div>
+  `;
+  container.appendChild(typing);
+  scrollToBottom();
+  return typing;
+}
+
+function removeTypingIndicator() {
+  const typing = document.getElementById("typing-bubble");
+  if (typing) typing.remove();
+}
+
+function escapeHtml(string) {
+  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;' }[s];
+  });
+}
+
+function appendAiResponse(data) {
+  removeTypingIndicator();
+  const container = document.getElementById("chat-messages");
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const bubble = document.createElement("div");
+  bubble.className = "web-chat-bubble web-bubble-ai";
+
+  let bodyHtml = `<p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">${escapeHtml(data.message || "")}</p>`;
+
+  // Handle Chart & Table Response
+  if (data.response_type === "chart_and_table" || (data.chart_data && data.table_data)) {
+    const chartId = `web-chart-bar-${++chartCounter}`;
+    bodyHtml += `
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+          <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${escapeHtml(data.title || "Monthly Revenue")}</span>
+          <span class="system-status-indicator" style="font-size: 10px;">6M Time Range</span>
+        </div>
+        <div style="height: 220px; position: relative;">
+          <canvas id="${chartId}"></canvas>
+        </div>
+      </div>
+      
+      <div style="overflow-x: auto; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <table class="enterprise-table">
+          <thead>
+            <tr>
+              <th>{{ t.table_month }}</th>
+              <th>{{ t.table_revenue }}</th>
+              <th>{{ t.table_growth }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.table_data.map(row => `
+              <tr>
+                <td style="font-weight: 700;">${escapeHtml(row.month)}</td>
+                <td>${escapeHtml(row.revenue)}</td>
+                <td style="color: ${row.growth.includes('↑') ? 'var(--color-green)' : 'var(--text-muted)'}; font-weight: 700;">
+                  ${escapeHtml(row.growth)}
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    setTimeout(() => {
+      const ctx = document.getElementById(chartId);
+      if (ctx) {
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: data.chart_data.labels,
+            datasets: [{
+              data: data.chart_data.values,
+              backgroundColor: "#ccff00",
+              borderRadius: 6,
+              barThickness: 32,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
+              y: {
+                grid: { color: "rgba(255,255,255,0.06)" },
+                ticks: {
+                  color: "#8e9da8",
+                  font: { size: 11 },
+                  callback: (v) => (v >= 1000 ? v / 1000 + "K" : v)
+                }
+              }
+            }
+          }
+        });
+      }
+    }, 80);
+  } else if (data.response_type === "table" && data.columns && data.data) {
+    bodyHtml += `
+      <div style="overflow-x: auto; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <table class="enterprise-table">
+          <thead>
+            <tr>${data.columns.map(c => `<th>${escapeHtml(c)}</th>`).join("")}</tr>
+          </thead>
+          <tbody>
+            ${data.data.map(row => `
+              <tr>${data.columns.map(c => `<td>${escapeHtml(row[c] || "")}</td>`).join("")}</tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else if (data.response_type === "kpi_list" && data.items) {
+    bodyHtml += `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 10px;">
+        ${data.items.map(it => `
+          <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+              <div style="font-weight: 700; font-size: 13.5px;">${escapeHtml(it.name)}</div>
+              <div style="color: var(--accent-lime); font-weight: 800; font-size: 15px;">${it.utilization}</div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);">${it.bookings} bookings • ${it.status}</div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  // Live Query Metadata Bar
+  bodyHtml += `
+    <div style="margin-top: 14px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+      <span>🔒 {{ t.live_query_info }}</span>
+      <span>${timeStr}</span>
+    </div>
+  `;
+
+  bubble.innerHTML = `
+    <div class="user-avatar" style="width: 38px; height: 38px;">🤖</div>
+    <div class="web-bubble-card">
+      ${bodyHtml}
+    </div>
+  `;
+
+  container.appendChild(bubble);
+  scrollToBottom();
+}
+
+async function sendChatQuery(prompt) {
+  if (!prompt || !prompt.trim()) return;
+  appendUserMessage(prompt);
+  appendTypingIndicator();
+
+  try {
+    const res = await fetch("{% url 'dashboard:chat_api' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: JSON.stringify({ prompt: prompt })
+    });
+    const data = await res.json();
+    appendAiResponse(data);
+  } catch (err) {
+    removeTypingIndicator();
+    appendAiResponse({
+      status: "error",
+      message: "Connection failed. Please ensure the backend is running.",
+    });
+  }
+}
+
+document.getElementById("chat-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = document.getElementById("chat-input");
+  const prompt = input.value.trim();
+  if (prompt) {
+    sendChatQuery(prompt);
+    input.value = "";
+  }
+});
+
+// Auto-execute if loaded with query parameter (?prompt=...)
+window.addEventListener("DOMContentLoaded", () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const initPrompt = urlParams.get("prompt");
+  if (initPrompt) {
+    sendChatQuery(initPrompt);
+  }
+});
+</script>
+{% endblock %}

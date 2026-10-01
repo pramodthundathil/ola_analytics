@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "ai_assistant",
     "analytics",
     "api",
+    "dashboard",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

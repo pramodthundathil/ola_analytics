@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ t.welcome_back }} - Arrendadora Ola Cars AI Superuser{% endblock %}
+
+{% block unauth_content %}
+<!-- Initial Server Startup Loading Splash Screen -->
+<div id="server-startup-splash" aria-hidden="true">
+  <div style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 500px; padding: 20px;">
+    
+    <div style="position: relative; margin-bottom: 24px;">
+      <div class="splash-neon-ring"></div>
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+        <span style="font-size: 32px; font-weight: 800; color: #ccff00;">O</span>
+      </div>
+    </div>
+
+    <div style="font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #8e9da8; margin-bottom: 6px; font-weight: 700;">
+      {{ t.brand_subtitle }}
+    </div>
+    <div style="font-size: 32px; font-weight: 800; color: #ffffff; margin-bottom: 10px; letter-spacing: -0.5px;">
+      <span class="lime-o">O</span>LA CARS
+    </div>
+
+    <div style="font-size: 20px; font-weight: 800; color: #ffffff; margin-bottom: 8px;">
+      {{ t.pitch_title }}
+    </div>
+    <div style="font-size: 14px; color: #8e9da8; margin-bottom: 30px; line-height: 1.5;">
+      {{ t.pitch_desc }}
+    </div>
+
+    <!-- Progress Bar -->
+    <div style="width: 280px; height: 5px; background: #1a2228; border-radius: 9999px; overflow: hidden; margin-bottom: 14px;">
+      <div class="splash-progress-bar" style="height: 100%; width: 0%; background: #ccff00; border-radius: 9999px; box-shadow: 0 0 12px #ccff00; transition: width 0.3s ease;"></div>
+    </div>
+    <div class="splash-status-text" style="font-size: 12px; color: #64748b; font-weight: 500;">
+      {{ t.server_initializing }}
+    </div>
+
+  </div>
+</div>
+
+<!-- Split-Screen Enterprise Web Login -->
+<div class="login-split-container">
+  
+  <!-- Left Side: Brand Hero Banner -->
+  <div class="login-hero-side">
+    <div class="login-hero-brand">
+      <img src="{% static 'img/ola_cars_logo.jpg' %}" alt="Arrendadora Ola Cars" onerror="this.style.display='none'; document.getElementById('login-brand-fallback').style.display='block';">
+      <div id="login-brand-fallback" style="display: none; margin-bottom: 24px;">
+        <div style="font-size: 11px; letter-spacing: 3px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">{{ t.brand_subtitle }}</div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--text-primary);"><span class="lime-o">O</span>LA CARS</div>
+      </div>
+    </div>
+
+    <div>
+      <h1 class="hero-main-title">{{ t.pitch_title }}</h1>
+      <p class="hero-tagline-text">{{ t.pitch_desc }}</p>
+
+      <!-- Value Props -->
+      <div class="hero-value-cards">
+        <div class="hero-card-item">
+          <div class="hero-card-icon">💬</div>
+          <div>
+            <div class="hero-card-title">{{ t.chat_with_data }}</div>
+            <div class="hero-card-desc">Ask queries in English or Spanish with instant intelligent responses</div>
+          </div>
+        </div>
+
+        <div class="hero-card-item">
+          <div class="hero-card-icon">📈</div>
+          <div>
+            <div class="hero-card-title">{{ t.get_insights }}</div>
+            <div class="hero-card-desc">Automatic charts, trend forecasts, and business metrics</div>
+          </div>
+        </div>
+
+        <div class="hero-card-item">
+          <div class="hero-card-icon">🔒</div>
+          <div>
+            <div class="hero-card-title">{{ t.realtime_info }}</div>
+            <div class="hero-card-desc">Direct read-only ERP database connection with zero ERP modification</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Footer -->
+    <div class="hero-bottom-status">
+      <span class="pulse-dot"></span>
+      <span>Arrendadora Ola Cars AI Platform • Enterprise Superuser Edition</span>
+    </div>
+  </div>
+
+  <!-- Right Side: Clean Login Form -->
+  <div class="login-form-side">
+    
+    <!-- Top Right Controls (Language & Theme) -->
+    <div class="login-form-top-actions">
+      <div class="lang-switch-capsule">
+        <a href="{% url 'dashboard:set_language' %}?lang=en" class="lang-tab {% if lang == 'en' %}active{% endif %}">EN</a>
+        <a href="{% url 'dashboard:set_language' %}?lang=es" class="lang-tab {% if lang == 'es' %}active{% endif %}">ES</a>
+      </div>
+      <button id="theme-toggle-btn" class="btn-icon" title="{{ t.theme_toggle }}" aria-label="Toggle Theme">
+        {% if theme == "light" %}🌙{% else %}☀️{% endif %}
+      </button>
+    </div>
+
+    <!-- Form Container -->
+    <div class="login-box-width">
+      <div style="margin-bottom: 28px;">
+        <h2 style="font-size: 26px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 6px;">
+          {{ t.welcome_back }}
+        </h2>
+        <p style="font-size: 13.5px; color: var(--text-secondary);">
+          {{ t.signin_subtitle }}
+        </p>
+      </div>
+
+      {% if error_message %}
+      <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 20px;">
+        ⚠️ {{ error_message }}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{% url 'dashboard:login' %}">
+        {% csrf_token %}
+        
+        <!-- Email / Username -->
+        <div style="margin-bottom: 18px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;" for="username">
+            {{ t.email_address }}
+          </label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <svg viewBox="0 0 24 24" style="position: absolute; left: 14px; width: 18px; height: 18px; color: var(--text-muted);" fill="currentColor">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            <input type="text" id="username" name="username" style="width: 100%; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px 12px 44px; color: var(--text-primary); font-size: 14px; outline: none; transition: var(--transition);" placeholder="admin@olacars.com" required autocomplete="username">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;" for="password">
+            {{ t.password }}
+          </label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <svg viewBox="0 0 24 24" style="position: absolute; left: 14px; width: 18px; height: 18px; color: var(--text-muted);" fill="currentColor">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+            <input type="password" id="password" name="password" style="width: 100%; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px 12px 44px; color: var(--text-primary); font-size: 14px; outline: none; transition: var(--transition);" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+        </div>
+
+        <!-- Remember me & Forgot Password -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; font-size: 13px;">
+          <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); cursor: pointer;">
+            <input type="checkbox" name="remember_me" checked style="accent-color: var(--accent-lime); width: 16px; height: 16px;">
+            <span>{{ t.remember_me }}</span>
+          </label>
+          <a href="#" style="color: var(--text-secondary); text-decoration: none;" onclick="alert('Please contact your administrator or use the demo buttons below.'); return false;">
+            {{ t.forgot_password }}
+          </a>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-new-query" style="width: 100%; height: 46px; font-size: 14.5px;">
+          {{ t.sign_in }}
+        </button>
+
+        <div style="display: flex; align-items: center; text-align: center; margin: 18px 0; color: var(--text-muted); font-size: 12px; text-transform: uppercase; font-weight: 600;">
+          <span style="flex: 1; border-bottom: 1px solid var(--border-color);"></span>
+          <span style="padding: 0 10px;">{{ t.or }}</span>
+          <span style="flex: 1; border-bottom: 1px solid var(--border-color);"></span>
+        </div>
+
+        <!-- Sign in with SSO -->
+        <button type="button" class="btn-icon" style="width: 100%; height: 42px; border-radius: var(--radius-md); gap: 10px; font-weight: 600;" onclick="document.getElementById('username').value='admin@olacars.com'; document.getElementById('password').value='admin123'; this.form.submit();">
+          <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          <span>{{ t.sign_in_sso }}</span>
+        </button>
+
+        <!-- Demo Accounts Box -->
+        <div style="background: var(--bg-secondary); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 14px; margin-top: 24px;">
+          <div style="font-weight: 700; color: var(--accent-lime); font-size: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span>⚡ {{ t.demo_accounts }}</span>
+            <span style="font-size: 10px; color: var(--text-muted);">One-click fill</span>
+          </div>
+          <button type="button" class="demo-btn-fill" data-user="admin" data-pass="admin123" style="width: 100%; text-align: left; padding: 6px 10px; margin-bottom: 6px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); cursor: pointer; font-size: 11.5px;">
+            🔑 {{ t.admin_demo }}
+          </button>
+          <button type="button" class="demo-btn-fill" data-user="analyst" data-pass="analyst123" style="width: 100%; text-align: left; padding: 6px 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); cursor: pointer; font-size: 11.5px;">
+            📊 {{ t.analyst_demo }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

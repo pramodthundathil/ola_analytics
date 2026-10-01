@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ t.settings }} - Arrendadora Ola Cars AI Superuser{% endblock %}
+{% block breadcrumb %}{{ t.settings }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  
+  <div style="margin-bottom: 24px;">
+    <h1 style="font-size: 22px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">
+      {{ t.settings }} & User Management
+    </h1>
+    <p style="font-size: 13px; color: var(--text-secondary);">Manage account credentials, role permissions, and interface preferences</p>
+  </div>
+
+  <!-- User Profile Card -->
+  <div class="web-panel-card" style="margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 18px;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #1e293b; border: 2px solid var(--accent-lime); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: var(--accent-lime);">
+          {{ user.first_name|default:user.username|slice:":1"|upper }}
+        </div>
+        <div>
+          <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);">
+            {{ user.first_name|default:user.username }} {{ user.last_name|default:"" }}
+          </div>
+          <div style="font-size: 13px; color: var(--text-secondary);">
+            {{ user.email|default:"admin@olacars.com" }}
+          </div>
+          <div style="margin-top: 4px;">
+            <span class="system-status-indicator" style="display: inline-flex; font-size: 10px; padding: 2px 8px;">
+              {{ user.role|default:"SUPERUSER" }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <a href="{% url 'dashboard:logout' %}" class="btn-icon" style="width: auto; padding: 0 16px; border-color: rgba(239, 68, 68, 0.4); color: var(--color-red); text-decoration: none; font-weight: 700; font-size: 13px; gap: 8px;">
+        <span>🚪</span> <span>{{ t.nav_logout }}</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Preferences & Configurations Grid -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-bottom: 24px;">
+    
+    <!-- Language Preference Setting -->
+    <div class="web-panel-card">
+      <div style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
+        🌐 {{ t.language }} Preference
+      </div>
+      <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px;">
+        Select your preferred language. All metrics, charts, AI queries and navigation will update dynamically.
+      </p>
+
+      <div style="display: flex; gap: 10px;">
+        <a href="{% url 'dashboard:set_language' %}?lang=en" class="btn-icon" style="flex: 1; height: 42px; text-decoration: none; font-weight: 700; border-radius: var(--radius-md); {% if lang == 'en' %}background: var(--accent-lime); color: #000; border-color: var(--accent-lime);{% endif %}">
+          🇺🇸 English (Default)
+        </a>
+        <a href="{% url 'dashboard:set_language' %}?lang=es" class="btn-icon" style="flex: 1; height: 42px; text-decoration: none; font-weight: 700; border-radius: var(--radius-md); {% if lang == 'es' %}background: var(--accent-lime); color: #000; border-color: var(--accent-lime);{% endif %}">
+          🇪🇸 Español (Spanish)
+        </a>
+      </div>
+    </div>
+
+    <!-- Theme Preference Setting -->
+    <div class="web-panel-card">
+      <div style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
+        🎨 Interface Theme
+      </div>
+      <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px;">
+        Toggle between deep high-contrast Dark Mode (#05080A) and enterprise Light Mode (#F8FAFC).
+      </p>
+
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn-icon" style="flex: 1; height: 42px; font-weight: 700; border-radius: var(--radius-md);" onclick="OlaApp.applyTheme('dark')">
+          🌙 Dark Mode
+        </button>
+        <button type="button" class="btn-icon" style="flex: 1; height: 42px; font-weight: 700; border-radius: var(--radius-md);" onclick="OlaApp.applyTheme('light')">
+          ☀️ Light Mode
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Connected ERP Data Source Status -->
+  <div class="web-panel-card">
+    <div style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+      <span>🗄️ ERP Data Access Architecture</span>
+      <span class="system-status-indicator">Read-Only Direct DB</span>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 14px;">
+      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Database Name</div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">olaCarsFresh</div>
+      </div>
+
+      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Permissions</div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--color-green); margin-top: 2px;">SELECT ONLY</div>
+      </div>
+
+      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Safety Layer</div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--accent-lime); margin-top: 2px;">QueryValidator (10s limit)</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

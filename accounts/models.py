@@ -12,6 +12,7 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="VIEWER")
     department = models.CharField(max_length=100, blank=True, null=True)
+    language_preference = models.CharField(max_length=10, choices=(("en", "English"), ("es", "Español")), default="en")
 
     def is_superuser_role(self):
         return self.role == "SUPERUSER" or self.is_superuser

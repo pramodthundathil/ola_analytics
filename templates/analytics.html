@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ t.analytics_title }} - Arrendadora Ola Cars AI Superuser{% endblock %}
+{% block breadcrumb %}{{ t.nav_analytics }}{% endblock %}
+
+{% block content %}
+<!-- Top Filter & Control Toolbar -->
+<div class="analytics-filter-toolbar">
+  <div>
+    <h1 style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">
+      {{ t.analytics_title }} & Business Intelligence
+    </h1>
+    <div style="font-size: 12px; color: var(--text-secondary);">Real-time revenue, booking trends & fleet utilization</div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 14px;">
+    <!-- Time Filter Pills (7D, 30D, 3M, 6M, 1Y) -->
+    <div class="time-pill-group">
+      <button class="time-pill-btn filter-tab" data-period="7D">7D</button>
+      <button class="time-pill-btn filter-tab" data-period="30D">30D</button>
+      <button class="time-pill-btn filter-tab" data-period="3M">3M</button>
+      <button class="time-pill-btn filter-tab active" data-period="6M">6M</button>
+      <button class="time-pill-btn filter-tab" data-period="1Y">1Y</button>
+    </div>
+
+    <!-- Export Action -->
+    <button class="btn-icon" style="width: auto; padding: 0 14px; gap: 6px; font-weight: 600; font-size: 12px;" onclick="window.print()">
+      📥 Export
+    </button>
+  </div>
+</div>
+
+<!-- Row 1: Revenue Trend (2/3) + Donut (1/3) -->
+<div class="analytics-grid-row">
+  
+  <!-- Revenue Trend Card -->
+  <div class="web-panel-card">
+    <div class="panel-header-toolbar">
+      <div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 2px;">
+          {{ t.revenue_trend }}
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span id="rev-total-val" style="font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">
+            {{ revenue_data.total }}
+          </span>
+          <span class="metric-footer-badge trend-positive" style="font-size: 13px;">
+            ↑ <span id="rev-trend-pct">{{ revenue_data.trend }}</span> vs prev period
+          </span>
+        </div>
+      </div>
+      <div class="system-status-indicator" style="font-size: 11px;">
+        Live Collections
+      </div>
+    </div>
+
+    <div style="height: 250px; position: relative;">
+      <canvas id="revenueTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Bookings by Vehicle Type Donut -->
+  <div class="web-panel-card">
+    <div class="panel-header-toolbar">
+      <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">
+        {{ t.bookings_by_type }}
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: center; position: relative; height: 180px; margin-bottom: 14px;">
+      <canvas id="vehicleDonutChart"></canvas>
+      <div style="position: absolute; text-align: center; pointer-events: none;">
+        <div style="font-size: 22px; font-weight: 800; color: var(--text-primary); line-height: 1.1;">2,648</div>
+        <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">{{ t.total }}</div>
+      </div>
+    </div>
+
+    <!-- Donut Legend -->
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 12px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;"></span><span>SUV (38%)</span></div>
+      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></span><span>Sedan (28%)</span></div>
+      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ec4899;"></span><span>Hatchback (18%)</span></div>
+      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #a855f7;"></span><span>Luxury (10%)</span></div>
+      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 50%; background: #06b6d4;"></span><span>Others (6%)</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Row 2: Top Vehicles Performance (1/2) + Fleet Overview (1/2) -->
+<div class="analytics-grid-halves">
+  
+  <!-- Top Performing Vehicles -->
+  <div class="web-panel-card">
+    <div class="panel-header-toolbar">
+      <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">
+        {{ t.top_vehicles }}
+      </div>
+      <a href="{% url 'dashboard:chat' %}?prompt={{ t.prompt_top_vehicles|urlencode }}" style="font-size: 12px; color: var(--accent-lime); text-decoration: none; font-weight: 700;">
+        {{ t.see_all }} ›
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <!-- Vehicle 1: Toyota Fortuner -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="font-size: 26px;">🚙</div>
+          <div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Toyota Fortuner 4x4</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">428 {{ t.bookings_count|cut:"{count} "|lower }} • High Demand</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 16px; font-weight: 800; color: var(--accent-lime);">18%</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Fleet Share</div>
+        </div>
+      </div>
+
+      <!-- Vehicle 2: Hyundai Creta -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="font-size: 26px;">🚗</div>
+          <div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Hyundai Creta SX</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">342 {{ t.bookings_count|cut:"{count} "|lower }} • High Demand</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 16px; font-weight: 800; color: var(--accent-lime);">14%</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Fleet Share</div>
+        </div>
+      </div>
+
+      <!-- Vehicle 3: Maruti Suzuki Swift -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="font-size: 26px;">🚘</div>
+          <div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary);">Maruti Suzuki Swift</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">295 {{ t.bookings_count|cut:"{count} "|lower }} • Optimal</div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 16px; font-weight: 800; color: var(--accent-lime);">12%</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Fleet Share</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fleet Health & Utilization Breakdown -->
+  <div class="web-panel-card">
+    <div class="panel-header-toolbar">
+      <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">
+        {{ t.fleet_overview }}
+      </div>
+      <span class="system-status-indicator">
+        78% {{ t.utilization_rate }}
+      </span>
+    </div>
+
+    <!-- Fleet Count Tiles -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+      <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">{{ t.total_vehicles }}</div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--text-primary);">824</div>
+      </div>
+
+      <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+        <div style="font-size: 11px; color: var(--color-green); text-transform: uppercase;">{{ t.available_vehicles }}</div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--color-green);">428</div>
+      </div>
+
+      <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+        <div style="font-size: 11px; color: var(--color-blue); text-transform: uppercase;">{{ t.rented_vehicles }}</div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--color-blue);">362</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; color: var(--color-red);">🔧 {{ t.maintenance_vehicles }}</span>
+        <span style="font-size: 18px; font-weight: 800; color: var(--color-red);">24</span>
+      </div>
+
+      <div style="background: var(--bg-secondary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; color: var(--text-muted);">💤 {{ t.inactive_vehicles }}</span>
+        <span style="font-size: 18px; font-weight: 800; color: var(--text-primary);">10</span>
+      </div>
+    </div>
+
+    <!-- Utilization Progress Bar -->
+    <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+        <span style="font-weight: 600;">Overall Fleet Capacity</span>
+        <span style="color: var(--accent-lime); font-weight: 700;">78.4% Occupancy</span>
+      </div>
+      <div style="width: 100%; height: 8px; background: var(--bg-card); border-radius: 9999px; overflow: hidden;">
+        <div style="width: 78.4%; height: 100%; background: var(--accent-lime); border-radius: 9999px; box-shadow: 0 0 10px var(--accent-lime);"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Revenue Trend Chart
+  const lineCtx = document.getElementById("revenueTrendChart");
+  if (lineCtx) {
+    const ctx = lineCtx.getContext("2d");
+    const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+    gradient.addColorStop(0, "rgba(204, 255, 0, 0.45)");
+    gradient.addColorStop(1, "rgba(204, 255, 0, 0.0)");
+
+    window.revenueLineChart = new Chart(lineCtx, {
+      type: "line",
+      data: {
+        labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"],
+        datasets: [{
+          data: [148220, 162450, 176890, 198340, 215670, 242310],
+          borderColor: "#ccff00",
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.35,
+          borderWidth: 3,
+          pointBackgroundColor: "#ccff00",
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 12 } } },
+          y: {
+            grid: { color: "rgba(255,255,255,0.06)" },
+            ticks: {
+              color: "#8e9da8",
+              font: { size: 12 },
+              callback: (v) => (v >= 1000 ? "$" + (v / 1000) + "K" : "$" + v)
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Vehicle Donut Chart
+  const donutCtx = document.getElementById("vehicleDonutChart");
+  if (donutCtx) {
+    window.vehicleDonutChart = new Chart(donutCtx, {
+      type: "doughnut",
+      data: {
+        labels: ["SUV", "Sedan", "Hatchback", "Luxury", "Others"],
+        datasets: [{
+          data: [38, 28, 18, 10, 6],
+          backgroundColor: ["#3b82f6", "#ef4444", "#ec4899", "#a855f7", "#06b6d4"],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "75%",
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (item) => ` ${item.label}: ${item.parsed}%`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Time Period Switcher
+  window.updateAnalyticsPeriod = function(period) {
+    const dataMap = {
+      "7D": { total: "$142,300", trend: "+8.2%", data: [18000, 19500, 22000, 20100, 21400, 23000, 24300], labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] },
+      "30D": { total: "$412,900", trend: "+14.6%", data: [85000, 92000, 110000, 125900], labels: ["W1", "W2", "W3", "W4"] },
+      "3M": { total: "$656,320", trend: "+19.1%", data: [198340, 215670, 242310], labels: ["Jul", "Aug", "Sep"] },
+      "6M": { total: "$1,203,880", trend: "+24%", data: [148220, 162450, 176890, 198340, 215670, 242310], labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"] },
+      "1Y": { total: "$2,450,100", trend: "+31.5%", data: [98000, 112000, 124000, 138000, 148220, 162450, 176890, 198340, 215670, 242310, 255000, 270000], labels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"] }
+    };
+
+    const target = dataMap[period] || dataMap["6M"];
+    document.getElementById("rev-total-val").textContent = target.total;
+    document.getElementById("rev-trend-pct").textContent = target.trend;
+
+    if (window.revenueLineChart) {
+      window.revenueLineChart.data.labels = target.labels;
+      window.revenueLineChart.data.datasets[0].data = target.data;
+      window.revenueLineChart.update();
+    }
+  };
+});
+</script>
+{% endblock %}

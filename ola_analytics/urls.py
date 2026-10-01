@@ -7,7 +7,8 @@ from api.views import (
 )
 
 urlpatterns = [
-    path("", HealthCheckView.as_view(), name="root_health"),
+    # Web Portal Dashboard (HTML/CSS/JS with Login, Chat, Analytics, Bilingual)
+    path("", include("dashboard.urls")),
     path("admin/", admin.site.urls),
     
     # Streamable HTTP MCP Route (Recommended by Anthropic Claude Docs)
@@ -28,9 +29,7 @@ urlpatterns = [
     # Direct Root API shortcuts
     re_path(r"^schema/?$", SchemaDiscoveryView.as_view(), name="root_schema"),
     re_path(r"^openapi\.json/?$", OpenAPISchemaView.as_view(), name="root_openapi"),
-    re_path(r"^chat/?$", AIChatView.as_view(), name="root_chat"),
     re_path(r"^health/?$", HealthCheckView.as_view(), name="root_health_alt"),
-    re_path(r"^analytics/?$", AnalyticsSummaryView.as_view(), name="root_analytics"),
     
     # API v1 prefix
     path("api/v1/", include("api.urls")),

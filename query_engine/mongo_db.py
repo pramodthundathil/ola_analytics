@@ -7,7 +7,10 @@ Provides collection querying, SQL-to-Mongo translation, and live document joins 
 import os
 import re
 import logging
-import pymongo
+try:
+    import pymongo
+except ImportError:
+    pymongo = None
 from typing import Dict, Any, List, Optional
 from django.conf import settings
 
@@ -52,6 +55,8 @@ class MongoDBClient:
     @classmethod
     def get_db(cls):
         """Returns connected pymongo Database instance for live olaCarsFresh DB."""
+        if pymongo is None:
+            return None
         if cls._db is not None:
             return cls._db
 
