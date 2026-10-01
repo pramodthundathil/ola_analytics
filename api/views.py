@@ -119,3 +119,69 @@ class SchemaDiscoveryView(APIView):
         if col_name:
             return Response(SchemaDiscovery.get_collection_summary(col_name))
         return Response(SchemaDiscovery.get_full_schema())
+
+
+class OpenAPISchemaView(APIView):
+    """Standard OpenAPI 3.0 Specification Endpoint for Claude Custom Connectors and API Clients."""
+    def get(self, request):
+        host_url = request.build_absolute_uri("/api/v1")
+        return Response({
+            "openapi": "3.0.0",
+            "info": {
+                "title": "Ola Cars AI Analytics API",
+                "version": "1.0.0",
+                "description": "Read-only AI Superuser & Data Analytics API for Ola Cars ERP"
+            },
+            "servers": [
+                {"url": host_url}
+            ],
+            "paths": {
+                "/health/": {
+                    "get": {
+                        "summary": "Health check endpoint",
+                        "operationId": "getHealth",
+                        "responses": {"200": {"description": "System health status"}}
+                    }
+                },
+                "/chat/": {
+                    "post": {
+                        "summary": "AI Query & Chat Assistant",
+                        "operationId": "postAIChat",
+                        "requestBody": {
+                            "required": True,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "prompt": {"type": "string", "example": "Show monthly revenue breakdown"}
+                                        },
+                                        "required": ["prompt"]
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {"200": {"description": "Structured AI analytics response"}}
+                    }
+                },
+                "/analytics/": {
+                    "get": {
+                        "summary": "Get standard business KPIs and metrics",
+                        "operationId": "getAnalytics",
+                        "responses": {"200": {"description": "Standard business metrics"}}
+                    }
+                },
+                "/schema/": {
+                    "get": {
+                        "summary": "Discover ERP database schema metadata",
+                        "operationId": "getSchema",
+                        "responses": {"200": {"description": "Database schema metadata"}}
+                    }
+                }
+            },
+            "components": {
+                "securitySchemes": {}
+            },
+            "security": []
+        })
+
