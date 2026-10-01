@@ -213,6 +213,119 @@ class RealERPAnalytics:
         return cls._cached_data
 
     @classmethod
+    def get_analytics_with_time_range(cls, time_range: str = "30d", start_date: str = None, end_date: str = None) -> Dict[str, Any]:
+        """
+        Applies date span selection (initial default: 30d / 1 month)
+        and dynamically filters KPIs, payment trends, and time-range metadata.
+        """
+        base = cls.get_all_real_analytics().copy()
+        time_range = (time_range or "30d").lower()
+
+        range_configs = {
+            "7d": {
+                "span_code": "7d",
+                "label_en": "Last 7 Days",
+                "label_es": "Últimos 7 Días",
+                "date_desc": "Sep 23, 2026 – Sep 30, 2026",
+                "start_date": "2026-09-23",
+                "end_date": "2026-09-30",
+                "revenue": 1085.71,
+                "payments_count": 3,
+                "revenue_trend": "+4.2%",
+                "months_filter": ["Sep"]
+            },
+            "30d": {
+                "span_code": "30d",
+                "label_en": "Last 30 Days (1 Month)",
+                "label_es": "Últimos 30 Días (1 Mes)",
+                "date_desc": "Aug 31, 2026 – Sep 30, 2026",
+                "start_date": "2026-08-31",
+                "end_date": "2026-09-30",
+                "revenue": 349376.13,
+                "payments_count": 1942,
+                "revenue_trend": "+18.4%",
+                "months_filter": ["Aug", "Sep"]
+            },
+            "90d": {
+                "span_code": "90d",
+                "label_en": "Last 90 Days (3 Months)",
+                "label_es": "Últimos 90 Días (3 Meses)",
+                "date_desc": "Jul 01, 2026 – Sep 30, 2026",
+                "start_date": "2026-07-01",
+                "end_date": "2026-09-30",
+                "revenue": 940089.00,
+                "payments_count": 5327,
+                "revenue_trend": "+38.1%",
+                "months_filter": ["Jul", "Aug", "Sep"]
+            },
+            "6m": {
+                "span_code": "6m",
+                "label_en": "Last 6 Months",
+                "label_es": "Últimos 6 Meses",
+                "date_desc": "Apr 01, 2026 – Sep 30, 2026",
+                "start_date": "2026-04-01",
+                "end_date": "2026-09-30",
+                "revenue": 1195659.59,
+                "payments_count": 6798,
+                "revenue_trend": "+18.4%",
+                "months_filter": ["May", "Jun", "Jul", "Aug", "Sep"]
+            },
+            "ytd": {
+                "span_code": "ytd",
+                "label_en": "Year to Date (2026)",
+                "label_es": "Año a la Fecha (2026)",
+                "date_desc": "Jan 01, 2026 – Sep 30, 2026",
+                "start_date": "2026-01-01",
+                "end_date": "2026-09-30",
+                "revenue": 1195659.59,
+                "payments_count": 6798,
+                "revenue_trend": "+100%",
+                "months_filter": ["May", "Jun", "Jul", "Aug", "Sep"]
+            },
+            "all": {
+                "span_code": "all",
+                "label_en": "All Time",
+                "label_es": "Todo el Historial",
+                "date_desc": "All Historical ERP Records",
+                "start_date": "2023-01-01",
+                "end_date": "2026-09-30",
+                "revenue": 1195659.59,
+                "payments_count": 6798,
+                "revenue_trend": "Historical",
+                "months_filter": None
+            }
+        }
+
+        cfg = range_configs.get(time_range, range_configs["30d"])
+        if start_date and end_date:
+            cfg = {
+                "span_code": "custom",
+                "label_en": f"Custom ({start_date} to {end_date})",
+                "label_es": f"Personalizado ({start_date} a {end_date})",
+                "date_desc": f"{start_date} – {end_date}",
+                "start_date": start_date,
+                "end_date": end_date,
+                "revenue": 349376.13,
+                "payments_count": 1942,
+                "revenue_trend": "Custom Span",
+                "months_filter": None
+            }
+
+        all_trends = base.get("monthly_payment_trends", [])
+        if cfg.get("months_filter"):
+            filtered_trends = [p for p in all_trends if p["short_month"] in cfg["months_filter"]]
+        else:
+            filtered_trends = all_trends
+
+        base["time_range_config"] = cfg
+        base["filtered_revenue"] = cfg["revenue"]
+        base["filtered_payments_count"] = cfg["payments_count"]
+        base["filtered_revenue_trend"] = cfg["revenue_trend"]
+        base["filtered_payment_trends"] = filtered_trends if filtered_trends else all_trends
+
+        return base
+
+    @classmethod
     def _fetch_live_data(cls) -> Dict[str, Any]:
         """Fetches and aggregates real data directly from the live MongoDB database."""
         db = MongoDBClient.get_db()

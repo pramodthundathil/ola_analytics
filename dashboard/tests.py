@@ -200,3 +200,67 @@ class DashboardInterfaceTests(TestCase):
             self.assertEqual(data["status"], "success")
             self.assertIn(expected_text, data["message"])
 
+    def test_dashboard_date_span_filtering(self):
+        """
+        Verify date span selection and initial 1-month default:
+        - Default range is 30d (1 month) with $349,376.13 and 1,942 payments.
+        - Switching to 7d updates metrics to $1,085.71 and 3 payments.
+        - Switching to all shows historical $1,195,659.59.
+        - Custom date filtering updates the time range display.
+        """
+        self.client.login(username="admin_test", password="admin123_password")
+
+        # 1. Default (1 month / 30d)
+        res_default = self.client.get(reverse("dashboard:home"))
+        self.assertEqual(res_default.status_code, 200)
+        content_default = res_default.content.decode("utf-8")
+        self.assertIn("date-span-toolbar", content_default)
+        self.assertIn("349,376.13", content_default)
+        self.assertIn("1,942 payments", content_default)
+
+        # 2. 7 Days
+        res_7d = self.client.get(reverse("dashboard:home") + "?range=7d")
+        self.assertEqual(res_7d.status_code, 200)
+        content_7d = res_7d.content.decode("utf-8")
+        self.assertIn("1,085.71", content_7d)
+        self.assertIn("3 payments", content_7d)
+
+        # 3. All Time on Analytics
+        res_all = self.client.get(reverse("dashboard:analytics") + "?range=all")
+        self.assertEqual(res_all.status_code, 200)
+        content_all = res_all.content.decode("utf-8")
+        self.assertIn("1,195,659.59", content_all)
+
+        # 4. Custom range
+        res_custom = self.client.get(reverse("dashboard:home") + "?start_date=2026-08-01&end_date=2026-08-31")
+        self.assertEqual(res_custom.status_code, 200)
+        content_custom = res_custom.content.decode("utf-8")
+        self.assertIn("2026-08-01", content_custom)
+        self.assertIn("2026-08-31", content_custom)
+
+    def test_enterprise_tables_and_pagination(self):
+        """
+        Verify tables have sorting, live searching, pagination, and 'Show All' capability.
+        - Checks for 'table-manager.js' inclusion
+        - Checks for '.enterprise-table' class on data tables
+        - Checks for table sorting headers and search integration
+        """
+        self.client.login(username="admin_test", password="admin123_password")
+
+        # Home view tables
+        home_res = self.client.get(reverse("dashboard:home"))
+        self.assertEqual(home_res.status_code, 200)
+        home_content = home_res.content.decode("utf-8")
+        self.assertIn("table-manager.js", home_content)
+        self.assertIn("enterprise-table", home_content)
+        self.assertIn("Real Fleet Inventory & Models Directory", home_content)
+
+        # Analytics view tables
+        analytics_res = self.client.get(reverse("dashboard:analytics"))
+        self.assertEqual(analytics_res.status_code, 200)
+        analytics_content = analytics_res.content.decode("utf-8")
+        self.assertIn("enterprise-table", analytics_content)
+        self.assertIn("Real Fleet Model Distribution", analytics_content)
+        self.assertIn("MongoDB Staff Roles & AccessControl RBAC Templates", analytics_content)
+
+

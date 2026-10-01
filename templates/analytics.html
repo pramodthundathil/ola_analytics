@@ -27,6 +27,37 @@
   </div>
 </div>
 
+<!-- Date Span Selector Toolbar (Initial 1-Month Default - Rule 38 Enforced) -->
+<div class="date-span-toolbar">
+  <div class="date-span-left">
+    <div class="date-span-label">
+      <span>📅</span>
+      <span>Date Span:</span>
+    </div>
+    <div class="date-span-pills">
+      <a href="?range=7d" class="date-pill-btn {% if time_range == '7d' %}active{% endif %}">7D</a>
+      <a href="?range=30d" class="date-pill-btn {% if time_range == '30d' or not time_range %}active{% endif %}">30D (1M)</a>
+      <a href="?range=90d" class="date-pill-btn {% if time_range == '90d' %}active{% endif %}">90D (3M)</a>
+      <a href="?range=6m" class="date-pill-btn {% if time_range == '6m' %}active{% endif %}">6M</a>
+      <a href="?range=ytd" class="date-pill-btn {% if time_range == 'ytd' %}active{% endif %}">YTD</a>
+      <a href="?range=all" class="date-pill-btn {% if time_range == 'all' %}active{% endif %}">ALL</a>
+    </div>
+    <span class="active-span-badge">
+      <span>●</span>
+      <span>{{ time_cfg.label_en|default:"Last 30 Days (1 Month)" }}</span>
+      <span style="font-weight: 500; opacity: 0.85;">({{ time_cfg.date_desc|default:"Aug 31, 2026 – Sep 30, 2026" }})</span>
+    </span>
+  </div>
+
+  <form method="GET" action="{% url 'dashboard:analytics' %}" class="custom-date-box">
+    <input type="hidden" name="range" value="custom">
+    <input type="date" name="start_date" class="custom-date-input" value="{{ time_cfg.start_date|default:'2026-08-31' }}" required>
+    <span style="color: var(--text-muted); font-size: 11px;">to</span>
+    <input type="date" name="end_date" class="custom-date-input" value="{{ time_cfg.end_date|default:'2026-09-30' }}" required>
+    <button type="submit" class="btn-apply-date">Apply</button>
+  </form>
+</div>
+
 <!-- Top Real KPI Metric Strip (4 Essential Business Pillars) -->
 <div class="metrics-row-grid" style="margin-bottom: 24px;">
   <!-- Total Revenue Collected -->
@@ -38,7 +69,7 @@
     <div class="metric-primary-val">{{ payment_trends.total }}</div>
     <div class="metric-footer-badge trend-positive">
       <span>{{ payment_trends.transactions|default:6798 }} Payments</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">100% Bank Transfer</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(All-time: {{ payment_trends.all_time_total }})</span>
     </div>
   </div>
 
@@ -100,7 +131,7 @@
       </div>
       <div style="text-align: right;">
         <span style="font-size: 22px; font-weight: 800; color: var(--accent-lime);">{{ payment_trends.total }}</span>
-        <div style="font-size: 11px; color: var(--color-green); font-weight: 700;">6,798 Transactions</div>
+        <div style="font-size: 11px; color: var(--color-green); font-weight: 700;">{{ payment_trends.transactions }} Tx &bull; (All-time: {{ payment_trends.all_time_total }})</div>
       </div>
     </div>
 
@@ -245,24 +276,41 @@
       </a>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-      {% for m in fleet_distribution.top_models %}
-      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 34px; height: 34px; border-radius: 6px; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 16px;">
-            🚗
-          </div>
-          <div>
-            <div style="font-weight: 700; font-size: 13.5px; color: var(--text-primary);">{{ m.make }} {{ m.model }}</div>
-            <div style="font-size: 11.5px; color: var(--text-secondary);">{{ m.count }} vehicles in fleet</div>
-          </div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 15px; font-weight: 800; color: var(--accent-lime);">{{ m.percentage }}%</div>
-          <div style="font-size: 10px; color: var(--text-muted);">Fleet Share</div>
-        </div>
-      </div>
-      {% endfor %}
+    <div style="overflow-x: auto;">
+      <table class="enterprise-table">
+        <thead>
+          <tr>
+            <th>Vehicle Make & Model</th>
+            <th>Units in Fleet</th>
+            <th>Fleet Share</th>
+            <th>Demand Level</th>
+            <th>AI Query</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in fleet_distribution.top_models %}
+          <tr>
+            <td style="font-weight: 700; color: var(--text-primary);">
+              🚗 {{ m.make }} {{ m.model }}
+            </td>
+            <td style="font-weight: 800; color: var(--accent-lime);">{{ m.count }} units</td>
+            <td>
+              <span style="font-size: 12px; font-weight: 700; color: var(--color-blue);">{{ m.percentage }}%</span>
+            </td>
+            <td>
+              <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; {% if m.count >= 60 %}background: var(--color-green-bg); color: var(--color-green);{% else %}background: var(--color-blue-bg); color: var(--color-blue);{% endif %}">
+                {% if m.count >= 60 %}High Demand{% else %}Active Fleet{% endif %}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'dashboard:chat' %}?prompt=Analyze+utilization+and+bookings+for+{{ m.make }}+{{ m.model }}" style="font-size: 12px; color: var(--accent-lime); font-weight: 700; text-decoration: none;">
+                Query AI ›
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
 

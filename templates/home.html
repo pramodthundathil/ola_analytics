@@ -27,6 +27,37 @@
   </div>
 </div>
 
+<!-- Date Span Selector Toolbar (Initial 1-Month Default - Rule 38 Enforced) -->
+<div class="date-span-toolbar">
+  <div class="date-span-left">
+    <div class="date-span-label">
+      <span>📅</span>
+      <span>Date Span:</span>
+    </div>
+    <div class="date-span-pills">
+      <a href="?range=7d" class="date-pill-btn {% if time_range == '7d' %}active{% endif %}">7D</a>
+      <a href="?range=30d" class="date-pill-btn {% if time_range == '30d' or not time_range %}active{% endif %}">30D (1M)</a>
+      <a href="?range=90d" class="date-pill-btn {% if time_range == '90d' %}active{% endif %}">90D (3M)</a>
+      <a href="?range=6m" class="date-pill-btn {% if time_range == '6m' %}active{% endif %}">6M</a>
+      <a href="?range=ytd" class="date-pill-btn {% if time_range == 'ytd' %}active{% endif %}">YTD</a>
+      <a href="?range=all" class="date-pill-btn {% if time_range == 'all' %}active{% endif %}">ALL</a>
+    </div>
+    <span class="active-span-badge">
+      <span>●</span>
+      <span>{{ time_cfg.label_en|default:"Last 30 Days (1 Month)" }}</span>
+      <span style="font-weight: 500; opacity: 0.85;">({{ time_cfg.date_desc|default:"Aug 31, 2026 – Sep 30, 2026" }})</span>
+    </span>
+  </div>
+
+  <form method="GET" action="{% url 'dashboard:home' %}" class="custom-date-box">
+    <input type="hidden" name="range" value="custom">
+    <input type="date" name="start_date" class="custom-date-input" value="{{ time_cfg.start_date|default:'2026-08-31' }}" required>
+    <span style="color: var(--text-muted); font-size: 11px;">to</span>
+    <input type="date" name="end_date" class="custom-date-input" value="{{ time_cfg.end_date|default:'2026-09-30' }}" required>
+    <button type="submit" class="btn-apply-date">Apply</button>
+  </form>
+</div>
+
 <!-- Row 1: Top 4 Real KPI Metric Cards -->
 <div class="metrics-row-grid">
   <!-- Total Revenue Collected -->
@@ -38,7 +69,7 @@
     <div class="metric-primary-val">{{ kpis.total_revenue.value }}</div>
     <div class="metric-footer-badge trend-positive">
       <span>↑ {{ kpis.total_revenue.trend }}</span>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ kpis.total_revenue.sub }}</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ kpis.total_revenue.sub }} • {{ kpis.total_revenue.all_time_sub }}</span>
     </div>
   </div>
 
@@ -218,5 +249,59 @@
 
   </div>
 
+</div>
+
+<!-- Row 3: Paginated, Searchable, Sortable Fleet Inventory Directory -->
+<div class="web-panel-card" style="margin-top: 24px;">
+  <div class="panel-header-toolbar">
+    <div>
+      <div class="panel-heading-title">
+        <span>🚗</span> Real Fleet Inventory & Models Directory
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        Interactive sorting, live search filter & pagination with "Show All" option • Aggregated from <code>vehicles</code> collection
+      </div>
+    </div>
+    <span class="system-status-indicator" style="font-size: 11px;">
+      {{ real_data.total_vehicles }} Total Fleet Vehicles
+    </span>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="enterprise-table">
+      <thead>
+        <tr>
+          <th>Vehicle Make</th>
+          <th>Model Specification</th>
+          <th>Vehicles in Fleet</th>
+          <th>Fleet Share</th>
+          <th>Operational Status</th>
+          <th>AI Query Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in real_data.top_vehicle_models %}
+        <tr>
+          <td style="font-weight: 700; color: var(--text-primary);">{{ m.make }}</td>
+          <td><strong>{{ m.model }}</strong></td>
+          <td style="font-weight: 800; color: var(--accent-lime);">{{ m.count }} units</td>
+          <td>
+            <span style="font-size: 12px; font-weight: 700; color: var(--color-blue);">{{ m.percentage }}%</span>
+          </td>
+          <td>
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; {% if m.count >= 60 %}background: var(--color-green-bg); color: var(--color-green);{% else %}background: var(--color-blue-bg); color: var(--color-blue);{% endif %}">
+              {% if m.count >= 60 %}High Demand Fleet{% else %}Active Fleet{% endif %}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'dashboard:chat' %}?prompt=Analyze+utilization+and+bookings+for+{{ m.make }}+{{ m.model }}" style="font-size: 12px; color: var(--accent-lime); font-weight: 700; text-decoration: none;">
+              Analyze AI ›
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

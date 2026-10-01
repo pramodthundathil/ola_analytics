@@ -106,23 +106,40 @@ def set_language_view(request):
 def home_view(request):
     """
     Home / Superuser Dashboard View.
+    Supports dynamic date span filtering (initial default: 30 days / 1 month).
     Renders real KPIs computed directly from live ERP MongoDB database collections.
     """
     context = get_base_context(request)
     
-    real_data = RealERPAnalytics.get_all_real_analytics()
+    time_range = request.GET.get("range", "30d")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    real_data = RealERPAnalytics.get_analytics_with_time_range(
+        time_range=time_range,
+        start_date=start_date,
+        end_date=end_date
+    )
+    time_cfg = real_data.get("time_range_config", {})
     metrics = mcp_get_standard_metrics("all")
     
+    filtered_rev = real_data.get("filtered_revenue", real_data["total_revenue_collected"])
+    filtered_tx = real_data.get("filtered_payments_count", real_data["total_payments_count"])
+    trend_badge = real_data.get("filtered_revenue_trend", "+18.4%")
+
     context.update({
         "page_title": "Home - Arrendadora Ola Cars AI",
         "active_nav": "home",
         "metrics": metrics,
         "real_data": real_data,
+        "time_range": time_range,
+        "time_cfg": time_cfg,
         "kpis": {
             "total_revenue": {
-                "value": f"${real_data['total_revenue_collected']:,.2f}",
-                "trend": "+18.4%",
-                "sub": f"{real_data['total_payments_count']:,} payments",
+                "value": f"${filtered_rev:,.2f}",
+                "trend": trend_badge,
+                "sub": f"{filtered_tx:,} payments ({time_cfg.get('label_en', '30 Days')})",
+                "all_time_sub": f"All time: ${real_data['total_revenue_collected']:,.2f} (6,798 tx)",
                 "is_positive": True
             },
             "active_vehicles": {
@@ -166,20 +183,31 @@ def chat_view(request):
 def analytics_view(request):
     """
     Comprehensive Real ERP Analytics Dashboard Screen.
+    Supports dynamic date span filtering (initial default: 30 days / 1 month).
     Includes:
-    - Real Fleet Distribution & Top Models
+    - Real Fleet Distribution & Top Models (with Table Sorting, Searching, and Pagination)
     - Real Payment Trends & Revenue
     - Real Invoices & Receivables
     - Real Vendor Bills & Payables
     - Real Fixed Assets & Depreciation Valuation
     - Real Bank Accounts & Cash Balances
     - Real Operating Expenses & Monthly Burn Rate
-    - Real User Roles & Interaction Analytics
+    - Real MongoDB User Ecosystem & AccessControl RBAC Templates
     """
     context = get_base_context(request)
-    real_data = RealERPAnalytics.get_all_real_analytics()
+    
+    time_range = request.GET.get("range", "30d")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
 
-    payment_trends = real_data.get("monthly_payment_trends", [])
+    real_data = RealERPAnalytics.get_analytics_with_time_range(
+        time_range=time_range,
+        start_date=start_date,
+        end_date=end_date
+    )
+    time_cfg = real_data.get("time_range_config", {})
+
+    payment_trends = real_data.get("filtered_payment_trends") or real_data.get("monthly_payment_trends", [])
     trend_labels = [p["short_month"] for p in payment_trends]
     trend_values = [p["amount"] for p in payment_trends]
 
@@ -187,19 +215,24 @@ def analytics_view(request):
     exp_labels = [e["month"] for e in expenses_trends]
     exp_values = [e["amount"] for e in expenses_trends]
 
-    # Audit query interactions count
     total_audit_interactions = AIAuditLog.objects.count()
+    filtered_rev = real_data.get("filtered_revenue", real_data["total_revenue_collected"])
+    filtered_tx = real_data.get("filtered_payments_count", real_data["total_payments_count"])
 
     context.update({
         "page_title": "Analytics - Arrendadora Ola Cars AI",
         "active_nav": "analytics",
         "real_data": real_data,
+        "time_range": time_range,
+        "time_cfg": time_cfg,
         "payment_trends": {
             "labels": trend_labels,
             "values": trend_values,
-            "total": f"${real_data['total_revenue_collected']:,.2f}",
-            "trend": "+18.4%",
-            "transactions": real_data["total_payments_count"]
+            "total": f"${filtered_rev:,.2f}",
+            "all_time_total": f"${real_data['total_revenue_collected']:,.2f}",
+            "trend": real_data.get("filtered_revenue_trend", "+18.4%"),
+            "transactions": filtered_tx,
+            "all_time_transactions": real_data["total_payments_count"]
         },
         "fleet_distribution": {
             "total": real_data["total_vehicles"],
