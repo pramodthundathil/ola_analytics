@@ -42,10 +42,66 @@ def mcp_validate_sql(query: str) -> Dict[str, Any]:
 def mcp_execute_read_query(query: str, db_alias: str = "default") -> Dict[str, Any]:
     """
     MCP Tool: Execute Read-Only Database Query.
-    Executes query against live MongoDB ERP database (olaCarsFresh).
-    Returns populated driver, customer, and vehicle details with all currency amounts in USD ($).
+    Executes SQL query, JSON payload, or MongoDB query against live MongoDB ERP database (olaCarsFresh).
+    Supports full document counts, aggregations, and filtering without 500-limit capping.
     """
     return ReadOnlyQueryExecutor.execute_sql(query, db_alias=db_alias)
+
+
+def mcp_count_documents(collection_name: str, filter_dict: Optional[dict] = None) -> Dict[str, Any]:
+    """
+    MCP Tool: Count Documents in Collection.
+    Scans all documents in a MongoDB collection without any 500-row cap.
+    """
+    total = MongoDBClient.count_documents(collection_name, filter_dict=filter_dict)
+    return {
+        "status": "success",
+        "collection": collection_name,
+        "filter": filter_dict or {},
+        "total_count": total
+    }
+
+
+def mcp_execute_aggregation(collection_name: str, pipeline: List[dict]) -> Dict[str, Any]:
+    """
+    MCP Tool: Execute MongoDB Aggregation Pipeline.
+    Runs MongoDB aggregation stages ($match, $group, $sort, $project) across all documents in a collection.
+    """
+    return ReadOnlyQueryExecutor.execute_mongo_pipeline(collection_name, pipeline)
+
+
+def mcp_get_all_collection_stats() -> Dict[str, Any]:
+    """
+    MCP Tool: Get Document Counts and Statistics for All ERP Collections.
+    Returns exact counts for all 50+ MongoDB collections in the live database.
+    """
+    db = MongoDBClient.get_db()
+    if db is None:
+        return {"status": "error", "error": "Database offline"}
+
+    colls = MongoDBClient.list_collections()
+    stats = {}
+    total_docs = 0
+    for c in colls:
+        try:
+            cnt = db[c].count_documents({})
+            stats[c] = cnt
+            total_docs += cnt
+        except Exception as e:
+            stats[c] = f"Error: {e}"
+
+    # Also compute driver status breakdown
+    driver_statuses = list(db["drivers"].aggregate([{"$group": {"_id": "$status", "count": {"$sum": 1}}}]))
+    vehicle_statuses = list(db["vehicles"].aggregate([{"$group": {"_id": "$status", "count": {"$sum": 1}}}]))
+
+    return {
+        "status": "success",
+        "total_collections": len(colls),
+        "total_documents_across_all_collections": total_docs,
+        "collection_counts": stats,
+        "drivers_breakdown": driver_statuses,
+        "vehicles_breakdown": vehicle_statuses
+    }
 
 
 def mcp_get_standard_metrics(metric_type: str = "all") -> Dict[str, Any]:
@@ -94,4 +150,3 @@ def mcp_get_standard_metrics(metric_type: str = "all") -> Dict[str, Any]:
     if metric_type in metrics:
         return {metric_type: metrics[metric_type]}
     return metrics
-

@@ -1,17 +1,19 @@
 """
 MongoDB Access Layer for Ola Analytics.
 Connects directly to the live Ola Cars ERP MongoDB database (olaCarsFresh) in READ-ONLY mode.
-Provides collection querying, SQL-to-Mongo translation, and live document joins for Drivers, Vehicles, Invoices, Customers, and Bills.
+Provides collection querying, SQL-to-Mongo translation, aggregation execution, document counting,
+and live document joins for Drivers, Vehicles, Invoices, Customers, and Bills.
 """
 
 import os
 import re
+import json
 import logging
 try:
     import pymongo
 except ImportError:
     pymongo = None
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from django.conf import settings
 
 logger = logging.getLogger("query_engine")
@@ -30,6 +32,7 @@ class MongoDBClient:
         "car": "vehicles",
         "cars": "vehicles",
         "fleet": "vehicles",
+        "fleets": "fleets",
         "customer": "customers",
         "customers": "customers",
         "driver": "drivers",
@@ -39,7 +42,10 @@ class MongoDBClient:
         "payment": "payments",
         "payments": "payments",
         "paymentreceived": "paymentreceiveds",
+        "paymentreceiveds": "paymentreceiveds",
+        "paymentsreceived": "paymentsreceived",
         "paymentmade": "paymentmades",
+        "paymentmades": "paymentmades",
         "bill": "bills",
         "bills": "bills",
         "expense": "expenses",
@@ -49,7 +55,15 @@ class MongoDBClient:
         "admin": "admins",
         "admins": "admins",
         "branch": "branches",
-        "branches": "branches"
+        "branches": "branches",
+        "fixedasset": "fixedassets",
+        "fixedassets": "fixedassets",
+        "bankaccount": "bankaccounts",
+        "bankaccounts": "bankaccounts",
+        "banktransaction": "banktransactions",
+        "banktransactions": "banktransactions",
+        "ledgerentry": "ledgerentries",
+        "ledgerentries": "ledgerentries"
     }
 
     @classmethod
@@ -62,14 +76,16 @@ class MongoDBClient:
 
         mongo_uri = os.getenv(
             "MONGO_URI",
-            getattr(settings, "MONGO_URI", "mongodb+srv://admin:123@cluster0.h9lmv8j.mongodb.net/olaCarsFresh?appName=Cluster0")
+            getattr(settings, "MONGO_URI", "mongodb+srv://mcp_user:mcp_%402026app@cluster0.6bdmvf.mongodb.net/olaCarsFresh?appName=Cluster0")
         )
+        if "mcp_@2026app" in mongo_uri:
+            mongo_uri = mongo_uri.replace("mcp_@2026app", "mcp_%402026app")
+
         db_name = os.getenv("ERP_DB_NAME", getattr(settings, "ERP_DB_NAME", "olaCarsFresh"))
 
         try:
             cls._client = pymongo.MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
             cls._db = cls._client[db_name]
-            # Quick ping test
             cls._db.command("ping")
             logger.info(f"Successfully connected to live MongoDB Database: {db_name}")
             return cls._db
@@ -99,7 +115,6 @@ class MongoDBClient:
         if clean_target in cls.COLLECTION_ALIASES:
             return cls.COLLECTION_ALIASES[clean_target]
         
-        # Check against live collection list
         live_colls = cls.list_collections()
         for c in live_colls:
             if c.lower() == clean_target:
@@ -126,15 +141,16 @@ class MongoDBClient:
     @classmethod
     def populate_references(cls, db, collection_name: str, docs: List[dict]) -> List[dict]:
         """Enriches documents with driver, customer, and vehicle names for complete data visibility."""
-        if not docs:
+        if not docs or not isinstance(docs, list):
             return docs
 
-        # Cache reference maps
         driver_ids = set()
         customer_ids = set()
         vehicle_ids = set()
 
         for d in docs:
+            if not isinstance(d, dict):
+                continue
             if isinstance(d.get("driver"), str) and len(d.get("driver")) == 24:
                 driver_ids.add(d.get("driver"))
             if isinstance(d.get("customer"), str) and len(d.get("customer")) == 24:
@@ -196,8 +212,9 @@ class MongoDBClient:
             except Exception as e:
                 logger.error(f"Error fetching vehicle references: {e}")
 
-        # Inject populated details into docs
         for d in docs:
+            if not isinstance(d, dict):
+                continue
             drv_id = str(d.get("driver") or d.get("currentDriver") or "")
             if drv_id in driver_map:
                 d["driverName"] = driver_map[drv_id]["driverName"]
@@ -218,7 +235,35 @@ class MongoDBClient:
         return docs
 
     @classmethod
-    def query_collection(cls, collection_name: str, filter_dict: dict = None, limit: int = 500) -> List[dict]:
+    def count_documents(cls, collection_name: str, filter_dict: dict = None) -> int:
+        """Counts documents in a collection across all records without limit."""
+        db = cls.get_db()
+        if db is None:
+            return 0
+        coll_name = cls.resolve_collection_name(collection_name)
+        try:
+            return db[coll_name].count_documents(filter_dict or {})
+        except Exception as e:
+            logger.error(f"Error counting documents in '{coll_name}': {e}")
+            return 0
+
+    @classmethod
+    def aggregate_collection(cls, collection_name: str, pipeline: List[dict]) -> List[dict]:
+        """Executes a full MongoDB aggregation pipeline across all records in a collection."""
+        db = cls.get_db()
+        if db is None:
+            return []
+        coll_name = cls.resolve_collection_name(collection_name)
+        try:
+            cursor = db[coll_name].aggregate(pipeline)
+            raw_results = list(cursor)
+            return cls.serialize_mongo_doc(raw_results)
+        except Exception as e:
+            logger.error(f"Error running aggregation on '{coll_name}': {e}")
+            return []
+
+    @classmethod
+    def query_collection(cls, collection_name: str, filter_dict: dict = None, limit: int = 1000) -> List[dict]:
         """Executes read-only query on specified MongoDB collection with reference joins."""
         db = cls.get_db()
         if db is None:
@@ -228,8 +273,10 @@ class MongoDBClient:
         try:
             coll = db[coll_name]
             filter_dict = filter_dict or {}
-            cursor = coll.find(filter_dict).sort("_id", -1).limit(limit)
-            raw_results = list(cursor)
+            query_cursor = coll.find(filter_dict).sort("_id", -1)
+            if limit and limit > 0:
+                query_cursor = query_cursor.limit(limit)
+            raw_results = list(query_cursor)
             serialized = cls.serialize_mongo_doc(raw_results)
             enriched = cls.populate_references(db, coll_name, serialized)
             return enriched
@@ -238,60 +285,167 @@ class MongoDBClient:
             return []
 
     @classmethod
-    def execute_smart_query(cls, sql_or_query: str, limit: int = 500) -> Dict[str, Any]:
+    def _parse_where_clause(cls, where_str: str) -> dict:
+        """Parses simple SQL WHERE conditions into a MongoDB filter dictionary."""
+        filter_dict = {}
+        if not where_str:
+            return filter_dict
+
+        # Splitting AND conditions
+        conditions = re.split(r"\bAND\b", where_str, flags=re.IGNORECASE)
+        for cond in conditions:
+            cond = cond.strip()
+            # Match field = 'value' or field = "value" or field = 123
+            match_eq = re.match(r"([a-zA-Z0-9_\.]+)\s*=\s*['\"]?([^'\"]+)['\"]?", cond)
+            # Match field LIKE '%value%'
+            match_like = re.match(r"([a-zA-Z0-9_\.]+)\s+LIKE\s+['\"]?%?([^'%]+)%?['\"]?", cond, re.IGNORECASE)
+
+            if match_like:
+                field, val = match_like.group(1), match_like.group(2)
+                filter_dict[field] = {"$regex": val, "$options": "i"}
+            elif match_eq:
+                field, val = match_eq.group(1), match_eq.group(2)
+                if val.upper() in ["TRUE", "FALSE"]:
+                    filter_dict[field] = val.upper() == "TRUE"
+                elif val.isdigit():
+                    filter_dict[field] = int(val)
+                else:
+                    filter_dict[field] = val
+        return filter_dict
+
+    @classmethod
+    def execute_smart_query(cls, sql_or_query: Union[str, dict], limit: int = 1000) -> Dict[str, Any]:
         """
         Smart SQL & MongoDB Query Executor.
-        Translates SQL SELECT statements or queries into live MongoDB execution results.
+        Translates SQL SELECT statements, JSON payloads, or MongoDB syntax into live execution results.
+        Supports full collection counts, aggregation pipelines, and filtering without 500-limit capping.
         """
         db = cls.get_db()
         if db is None:
             return {"status": "error", "error": "Database connection offline", "data": []}
 
-        query_str = (sql_or_query or "").strip()
-        
-        # Determine target collection
-        target_coll = "invoices"
-        filter_dict = {}
+        # 1. Handle dict input or JSON string payload
+        if isinstance(sql_or_query, dict) or (isinstance(sql_or_query, str) and sql_or_query.strip().startswith("{")):
+            try:
+                payload = sql_or_query if isinstance(sql_or_query, dict) else json.loads(sql_or_query)
+                coll_name = cls.resolve_collection_name(payload.get("collection", payload.get("from", "invoices")))
+                action = payload.get("action", payload.get("type", "find")).lower()
 
-        if re.search(r"\bFROM\s+([a-zA-Z0-9_]+)", query_str, re.IGNORECASE):
-            match = re.search(r"\bFROM\s+([a-zA-Z0-9_]+)", query_str, re.IGNORECASE)
-            target_coll = cls.resolve_collection_name(match.group(1))
-        elif any(k in query_str.lower() for k in ["vehicle", "car", "fleet"]):
-            target_coll = "vehicles"
-        elif any(k in query_str.lower() for k in ["driver"]):
-            target_coll = "drivers"
-        elif any(k in query_str.lower() for k in ["customer"]):
-            target_coll = "customers"
-        elif any(k in query_str.lower() for k in ["bill"]):
-            target_coll = "bills"
+                if action in ["count", "countdocuments"] or payload.get("count", False):
+                    cnt = cls.count_documents(coll_name, filter_dict=payload.get("filter", payload.get("query", {})))
+                    return {
+                        "status": "success",
+                        "collection": coll_name,
+                        "action": "count",
+                        "total_count": cnt,
+                        "data": [{"collection": coll_name, "count": cnt}]
+                    }
+                elif action in ["aggregate", "pipeline"] or "pipeline" in payload:
+                    pipeline = payload.get("pipeline", [])
+                    results = cls.aggregate_collection(coll_name, pipeline)
+                    return {
+                        "status": "success",
+                        "collection": coll_name,
+                        "action": "aggregate",
+                        "row_count": len(results),
+                        "data": results
+                    }
+                else:
+                    # Standard find query
+                    filter_dict = payload.get("filter", payload.get("query", {}))
+                    query_limit = payload.get("limit", limit)
+                    results = cls.query_collection(coll_name, filter_dict=filter_dict, limit=query_limit)
+                    return {
+                        "status": "success",
+                        "collection": coll_name,
+                        "action": "find",
+                        "row_count": len(results),
+                        "data": results
+                    }
+            except Exception as json_err:
+                logger.warning(f"Could not parse JSON query payload: {json_err}")
 
-        # Check for status filters
+        query_str = (str(sql_or_query) if sql_or_query else "").strip()
+
+        # 2. Check for SQL COUNT / GROUP BY statements
+        is_count_query = bool(re.search(r"\bCOUNT\s*\(", query_str, re.IGNORECASE))
+        group_by_match = re.search(r"\bGROUP\s+BY\s+([a-zA-Z0-9_\.]+)", query_str, re.IGNORECASE)
+        from_match = re.search(r"\bFROM\s+([a-zA-Z0-9_]+)", query_str, re.IGNORECASE)
+
+        target_coll = cls.resolve_collection_name(from_match.group(1)) if from_match else "invoices"
+        if not from_match:
+            if any(k in query_str.lower() for k in ["vehicle", "car", "fleet"]):
+                target_coll = "vehicles"
+            elif any(k in query_str.lower() for k in ["driver"]):
+                target_coll = "drivers"
+            elif any(k in query_str.lower() for k in ["customer"]):
+                target_coll = "customers"
+            elif any(k in query_str.lower() for k in ["bill"]):
+                target_coll = "bills"
+
+        # Parse SQL WHERE clause
+        where_match = re.search(r"\bWHERE\s+(.*?)(?:\bGROUP\b|\bORDER\b|\bLIMIT\b|$)", query_str, re.IGNORECASE | re.DOTALL)
+        where_str = where_match.group(1).strip() if where_match else ""
+        filter_dict = cls._parse_where_clause(where_str)
+
+        # Apply fallback regex filters for common keywords if not matched by WHERE
         query_upper = query_str.upper()
-        if "OVERDUE" in query_upper:
-            if target_coll == "invoices":
-                filter_dict["$or"] = [
-                    {"status": "OVERDUE"},
-                    {"status": "PENDING"},
-                    {"status": "PARTIAL"}
-                ]
-            else:
-                filter_dict["status"] = {"$regex": "OVERDUE|PENDING|PARTIAL", "$options": "i"}
-        elif "AVAILABLE" in query_upper:
-            filter_dict["status"] = {"$regex": "AVAILABLE", "$options": "i"}
-        elif "RENTED" in query_upper:
-            filter_dict["status"] = {"$regex": "RENTED", "$options": "i"}
-        elif "PAID" in query_upper:
-            filter_dict["status"] = "PAID"
+        if not filter_dict:
+            if "OVERDUE" in query_upper:
+                if target_coll == "invoices":
+                    filter_dict["$or"] = [{"status": "OVERDUE"}, {"status": "PENDING"}, {"status": "PARTIAL"}]
+                else:
+                    filter_dict["status"] = {"$regex": "OVERDUE|PENDING|PARTIAL", "$options": "i"}
+            elif "AVAILABLE" in query_upper:
+                filter_dict["status"] = {"$regex": "AVAILABLE", "$options": "i"}
+            elif "RENTED" in query_upper:
+                filter_dict["status"] = {"$regex": "RENTED", "$options": "i"}
+            elif "PAID" in query_upper:
+                filter_dict["status"] = "PAID"
 
-        data = cls.query_collection(target_coll, filter_dict=filter_dict, limit=limit)
+        # Handle SQL GROUP BY aggregation
+        if group_by_match:
+            group_field = group_by_match.group(1)
+            pipeline = []
+            if filter_dict:
+                pipeline.append({"$match": filter_dict})
+            pipeline.append({"$group": {"_id": f"${group_field}", "count": {"$sum": 1}}})
+            pipeline.append({"$sort": {"count": -1}})
+            agg_results = cls.aggregate_collection(target_coll, pipeline)
+            return {
+                "status": "success",
+                "collection": target_coll,
+                "query": query_str,
+                "action": "group_by",
+                "row_count": len(agg_results),
+                "data": agg_results
+            }
+
+        # Handle SQL COUNT(*) without GROUP BY
+        if is_count_query and not group_by_match:
+            cnt = cls.count_documents(target_coll, filter_dict=filter_dict)
+            return {
+                "status": "success",
+                "collection": target_coll,
+                "query": query_str,
+                "action": "count",
+                "total_count": cnt,
+                "data": [{"collection": target_coll, "count": cnt, "filter": filter_dict}]
+            }
+
+        # Handle SQL LIMIT clause if present
+        limit_match = re.search(r"\bLIMIT\s+(\d+)", query_str, re.IGNORECASE)
+        query_limit = int(limit_match.group(1)) if limit_match else limit
+
+        data = cls.query_collection(target_coll, filter_dict=filter_dict, limit=query_limit)
         
-        # Build column list from data keys
         columns = []
         if data:
             for item in data[:5]:
-                for k in item.keys():
-                    if k not in columns and k not in ["passwordHash", "otp", "refreshToken"]:
-                        columns.append(k)
+                if isinstance(item, dict):
+                    for k in item.keys():
+                        if k not in columns and k not in ["passwordHash", "otp", "refreshToken"]:
+                            columns.append(k)
 
         return {
             "status": "success",

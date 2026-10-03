@@ -24,7 +24,7 @@ class ReadOnlyQueryExecutor:
         """
         is_valid, validated_query = QueryValidator.validate_sql(sql_query)
         if not is_valid:
-            # Fallback to smart query execution if simple entity query
+            # Fallback to smart query execution if simple entity or JSON/MongoDB query
             validated_query = sql_query
 
         start_time = time.time()
@@ -39,6 +39,8 @@ class ReadOnlyQueryExecutor:
                 "status": "success",
                 "collection": mongo_res.get("collection", "invoices"),
                 "query": validated_query,
+                "action": mongo_res.get("action", "find"),
+                "total_count": mongo_res.get("total_count"),
                 "columns": mongo_res.get("columns", []),
                 "row_count": len(masked_results),
                 "execution_time_ms": execution_time_ms,
@@ -58,16 +60,26 @@ class ReadOnlyQueryExecutor:
     @classmethod
     def execute_mongo_pipeline(cls, collection_name: str, pipeline: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Executes a validated MongoDB query or aggregation pipeline against live MongoDB.
+        Executes a validated MongoDB aggregation pipeline across all records in live MongoDB.
         """
         start_time = time.time()
         try:
-            raw_data = MongoDBClient.query_collection(collection_name, filter_dict=pipeline[0] if pipeline and isinstance(pipeline[0], dict) else None)
+            is_valid, msg = QueryValidator.validate_mongo_pipeline(pipeline)
+            if not is_valid:
+                return {
+                    "status": "error",
+                    "collection": collection_name,
+                    "error": f"Validation failed: {msg}",
+                    "data": []
+                }
+
+            raw_data = MongoDBClient.aggregate_collection(collection_name, pipeline=pipeline)
             execution_time_ms = round((time.time() - start_time) * 1000, 2)
             masked_data = SensitiveDataMasker.mask_data(raw_data)
             return {
                 "status": "success",
                 "collection": collection_name,
+                "action": "aggregate",
                 "row_count": len(masked_data),
                 "execution_time_ms": execution_time_ms,
                 "data": masked_data
