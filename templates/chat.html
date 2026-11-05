@@ -5,100 +5,185 @@
 {% block breadcrumb %}{{ t.nav_chat }}{% endblock %}
 
 {% block content %}
-<div class="ai-chat-workspace">
+<div class="chat-full-canvas">
   
-  <!-- Left Side: Query Library & Session Panel -->
-  <aside class="chat-sidebar-pane">
-    <button type="button" class="btn-new-query" onclick="clearChatMessages()">
-      <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-      <span>+ New AI Query</span>
-    </button>
-
-    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 10px;">
-      Query Templates
+  <!-- Sleek Executive Chat Header Toolbar -->
+  <header class="chat-header-toolbar">
+    <div class="chat-brand-pill">
+      <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent-lime); box-shadow: 0 0 10px var(--accent-lime);"></span>
+      <span style="font-size: 14.5px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px;">
+        {{ t.ai_assistant_title }}
+      </span>
+      <span class="chat-model-badge">
+        <span class="pulse-dot"></span>
+        <span>Claude Sonnet 5.5 • ERP Live</span>
+      </span>
     </div>
 
-    <!-- Suggested Business Prompt Templates -->
-    <div class="chat-prompt-library">
-      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_chart_revenue }}')">
-        <span style="font-size: 15px;">📊</span>
-        <span>{{ t.prompt_chart_revenue }}</span>
+    <div class="chat-toolbar-actions">
+      <button type="button" class="chat-btn-action" onclick="clearChatMessages()" title="Start New Conversation">
+        <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        <span>+ New Chat</span>
       </button>
 
-      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_overdue }}')">
-        <span style="font-size: 15px;">⚠️</span>
-        <span>{{ t.prompt_overdue }}</span>
-      </button>
-
-      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_top_vehicles }}')">
-        <span style="font-size: 15px;">🚗</span>
-        <span>{{ t.prompt_top_vehicles }}</span>
-      </button>
-
-      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_last_month }}')">
-        <span style="font-size: 15px;">📅</span>
-        <span>{{ t.prompt_last_month }}</span>
-      </button>
-
-      <button type="button" class="prompt-template-btn" onclick="sendChatQuery('{{ t.prompt_new_registrations }}')">
-        <span style="font-size: 15px;">📝</span>
-        <span>{{ t.prompt_new_registrations }}</span>
+      <button type="button" class="chat-btn-secondary" onclick="togglePromptDrawer()" title="View Query Templates">
+        <span>⚡</span>
+        <span>Templates (5)</span>
       </button>
     </div>
+  </header>
 
-    <!-- Security Indicator -->
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; margin-top: 14px; font-size: 11px; color: var(--text-muted);">
-      <div style="color: var(--accent-lime); font-weight: 700; margin-bottom: 4px;">🔒 Read-Only Safety Layer</div>
-      QueryValidator active: 10s timeout, 1000 row limits, SELECT only.
-    </div>
-  </aside>
-
-  <!-- Right Side: Main Chat Canvas -->
-  <section class="chat-main-canvas">
+  <!-- Chat Messages Scroll Container - The ONLY Scrollable Viewport -->
+  <div id="chat-messages" class="chat-thread-container">
     
-    <!-- Chat Header Toolbar -->
-    <div style="height: 52px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 0 24px; display: flex; align-items: center; justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">{{ t.ai_assistant_title }}</span>
-        <span style="font-size: 11px; color: var(--text-muted);">• Natural Language to Live Data</span>
+    <!-- Executive Welcome Hero (Initial / Empty State) -->
+    <div id="welcome-hero" class="chat-welcome-hero">
+      <div class="welcome-header">
+        <div class="welcome-badge">
+          <span class="pulse-dot"></span>
+          <span>ARRENDADORA OLA CARS AI SUPERUSER</span>
+        </div>
+        <h1 class="welcome-title">How can I assist you with company data today?</h1>
+        <p class="welcome-subtitle">
+          Direct read-only integration to live MongoDB ERP collections. Ask anything about revenue trends, fleet utilization, overdue receivables, supplier bills, or bank liquidity.
+        </p>
       </div>
-      <button type="button" class="btn-icon" style="height: 32px; font-size: 12px;" onclick="clearChatMessages()" title="Clear">
-        🗑️
+
+      <div class="welcome-cards-grid">
+        <!-- Card 1: Revenue -->
+        <button type="button" class="hero-prompt-card" onclick="sendChatQuery('Show monthly revenue trend with chart for last 6 months')">
+          <div class="card-icon-pill icon-emerald">📊</div>
+          <div class="card-text-block">
+            <div class="card-title">Revenue & Monthly Collections</div>
+            <div class="card-desc">Trends, MoM growth rates, bank transfer payments across last 6 months</div>
+          </div>
+          <div class="card-arrow">→</div>
+        </button>
+
+        <!-- Card 2: Fleet -->
+        <button type="button" class="hero-prompt-card" onclick="sendChatQuery('What is our fleet utilization and active vehicles count?')">
+          <div class="card-icon-pill icon-cyan">🚗</div>
+          <div class="card-text-block">
+            <div class="card-title">Fleet Utilization & Vehicle Status</div>
+            <div class="card-desc">Active rentals, yard availability, top vehicle makes and models in demand</div>
+          </div>
+          <div class="card-arrow">→</div>
+        </button>
+
+        <!-- Card 3: Receivables -->
+        <button type="button" class="hero-prompt-card" onclick="sendChatQuery('Which invoices are overdue and pending payment collection?')">
+          <div class="card-icon-pill icon-amber">⚠️</div>
+          <div class="card-text-block">
+            <div class="card-title">Overdue Invoices & Receivables</div>
+            <div class="card-desc">Outstanding customer balances, overdue collections and settlement rates</div>
+          </div>
+          <div class="card-arrow">→</div>
+        </button>
+
+        <!-- Card 4: Bank Liquidity -->
+        <button type="button" class="hero-prompt-card" onclick="sendChatQuery('What are our bank accounts and cash liquidity balances?')">
+          <div class="card-icon-pill icon-purple">💰</div>
+          <div class="card-text-block">
+            <div class="card-title">Bank Accounts & Cash Liquidity</div>
+            <div class="card-desc">Operational treasury accounts, liquid balances and masked account security</div>
+          </div>
+          <div class="card-arrow">→</div>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Permanent Fixed Bottom Dock (Anchored Firmly at the Bottom) -->
+  <div class="chat-bottom-dock">
+    
+    <!-- Quick Horizontal Suggestion Chips Carousel -->
+    <div class="chat-quick-chips-bar">
+      <button type="button" class="chat-chip-btn" onclick="sendChatQuery('Show monthly revenue trend with chart')">
+        <span>📊</span>
+        <span>Revenue Trend</span>
+      </button>
+      <button type="button" class="chat-chip-btn" onclick="sendChatQuery('What is our fleet utilization and active vehicles?')">
+        <span>🚗</span>
+        <span>Fleet Utilization</span>
+      </button>
+      <button type="button" class="chat-chip-btn" onclick="sendChatQuery('Which invoices are overdue and pending payment?')">
+        <span>⚠️</span>
+        <span>Overdue Invoices</span>
+      </button>
+      <button type="button" class="chat-chip-btn" onclick="sendChatQuery('Show vendor bills status and supplier payables')">
+        <span>🏢</span>
+        <span>Vendor Bills</span>
+      </button>
+      <button type="button" class="chat-chip-btn" onclick="sendChatQuery('What are our bank accounts and cash balances?')">
+        <span>💰</span>
+        <span>Bank Liquidity</span>
+      </button>
+      <button type="button" class="chat-chip-btn" onclick="sendChatQuery('Show operating expenses and monthly burn rate')">
+        <span>📉</span>
+        <span>Expense Burn</span>
       </button>
     </div>
 
-    <!-- Chat Messages Scroll Container -->
-    <div id="chat-messages" class="chat-thread-container">
-      
-      <!-- Greeting Banner -->
-      <div class="web-chat-bubble web-bubble-ai">
-        <div class="user-avatar" style="width: 38px; height: 38px;">🤖</div>
-        <div class="web-bubble-card">
-          <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">
-            {{ t.ai_greeting }}
-          </div>
-          <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-            Ask questions like <em>"Show me monthly revenue for the last 6 months with a chart"</em> or <em>"Which customers are overdue?"</em> in English or Spanish.
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Bottom Query Input Bar -->
+    <!-- Pinned Bottom Query Input Bar -->
     <form id="chat-form" class="web-chat-input-bar">
       <div class="web-input-capsule">
-        <button type="button" id="mic-btn" style="background: transparent; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);" title="Microphone Voice Input">
-          🎤
+        <button type="button" id="mic-btn" class="chat-mic-btn" title="Voice Speech Input" aria-label="Voice Input">
+          <svg viewBox="0 0 24 24" style="width: 17px; height: 17px; fill: currentColor;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
         </button>
-        <input type="text" id="chat-input" placeholder="{{ t.chat_followup_placeholder }}" autocomplete="off" required>
+        <input type="text" id="chat-input" placeholder="Ask Claude anything about revenue, fleet utilization, overdue debt..." autocomplete="off" required>
       </div>
-      <button type="submit" class="web-send-btn" aria-label="Send Query">
-        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+
+      <button type="submit" class="web-send-btn" id="send-btn" aria-label="Send Query" title="Send to Claude">
+        <svg viewBox="0 0 24 24" style="width: 19px; height: 19px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
     </form>
 
-  </section>
+  </div>
+
+  <!-- Offcanvas Slide-over Drawer for Business Prompt Templates -->
+  <div id="chat-drawer-backdrop" class="chat-drawer-backdrop" onclick="togglePromptDrawer()"></div>
+  <aside id="chat-offcanvas-drawer" class="chat-offcanvas-drawer">
+    <div class="drawer-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 16px;">⚡</span>
+        <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Executive Query Templates</span>
+      </div>
+      <button type="button" class="btn-icon" onclick="togglePromptDrawer()" aria-label="Close Drawer" style="font-size: 16px;">✕</button>
+    </div>
+    
+    <div class="drawer-body">
+      <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_chart_revenue }}')">
+        <div class="drawer-prompt-title">📊 {{ t.prompt_chart_revenue }}</div>
+        <div class="drawer-prompt-desc">Calculates monthly revenue, bank deposits and MoM changes with chart</div>
+      </button>
+
+      <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_overdue }}')">
+        <div class="drawer-prompt-title">⚠️ {{ t.prompt_overdue }}</div>
+        <div class="drawer-prompt-desc">Analyzes customer invoices past due date and open debt balances</div>
+      </button>
+
+      <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_top_vehicles }}')">
+        <div class="drawer-prompt-title">🚗 {{ t.prompt_top_vehicles }}</div>
+        <div class="drawer-prompt-desc">Breaks down fleet by model, rental demand, and yard availability</div>
+      </button>
+
+      <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_last_month }}')">
+        <div class="drawer-prompt-title">📅 {{ t.prompt_last_month }}</div>
+        <div class="drawer-prompt-desc">Retrieves total payment collections and verified transactions last month</div>
+      </button>
+
+      <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_new_registrations }}')">
+        <div class="drawer-prompt-title">📝 {{ t.prompt_new_registrations }}</div>
+        <div class="drawer-prompt-desc">Lists recent vehicle registrations and fleet additions</div>
+      </button>
+
+      <div style="background: rgba(204, 255, 0, 0.05); border: 1px solid rgba(204, 255, 0, 0.2); border-radius: var(--radius-md); padding: 12px; margin-top: 10px; font-size: 11.5px; color: var(--text-muted);">
+        <div style="color: var(--accent-lime); font-weight: 700; margin-bottom: 4px;">🔒 Read-Only Safety Layer</div>
+        Live ERP access protected by QueryValidator with 10s timeout, masked credentials, and SELECT-only security.
+      </div>
+    </div>
+  </aside>
 
 </div>
 {% endblock %}
@@ -106,39 +191,103 @@
 {% block extra_scripts %}
 <script>
 let chartCounter = 0;
+let chatHistory = [];
+
+function togglePromptDrawer() {
+  const drawer = document.getElementById("chat-offcanvas-drawer");
+  const backdrop = document.getElementById("chat-drawer-backdrop");
+  if (drawer && backdrop) {
+    drawer.classList.toggle("open");
+    backdrop.classList.toggle("active");
+  }
+}
+
+function selectTemplate(promptText) {
+  togglePromptDrawer();
+  sendChatQuery(promptText);
+}
 
 function scrollToBottom() {
   const container = document.getElementById("chat-messages");
-  if (container) container.scrollTop = container.scrollHeight;
+  if (container) {
+    requestAnimationFrame(() => {
+      container.scrollTop = container.scrollHeight;
+    });
+  }
 }
 
 function clearChatMessages() {
+  chatHistory = [];
   const container = document.getElementById("chat-messages");
   container.innerHTML = `
-    <div class="web-chat-bubble web-bubble-ai">
-      <div class="user-avatar" style="width: 38px; height: 38px;">🤖</div>
-      <div class="web-bubble-card">
-        <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">
-          {{ t.ai_greeting }}
+    <div id="welcome-hero" class="chat-welcome-hero">
+      <div class="welcome-header">
+        <div class="welcome-badge">
+          <span class="pulse-dot"></span>
+          <span>ARRENDADORA OLA CARS AI SUPERUSER</span>
         </div>
-        <div style="font-size: 13px; color: var(--text-secondary);">
-          Ask anything about your business data in English or Spanish.
-        </div>
+        <h1 class="welcome-title">How can I assist you with company data today?</h1>
+        <p class="welcome-subtitle">
+          Direct read-only integration to live MongoDB ERP collections. Ask anything about revenue trends, fleet utilization, overdue receivables, supplier bills, or bank liquidity.
+        </p>
+      </div>
+
+      <div class="welcome-cards-grid">
+        <button type="button" class="hero-prompt-card" onclick="sendChatQuery('Show monthly revenue trend with chart for last 6 months')">
+          <div class="card-icon-pill icon-emerald">📊</div>
+          <div class="card-text-block">
+            <div class="card-title">Revenue & Monthly Collections</div>
+            <div class="card-desc">Trends, MoM growth rates, bank transfer payments across last 6 months</div>
+          </div>
+          <div class="card-arrow">→</div>
+        </button>
+
+        <button type="button" class="hero-prompt-card" onclick="sendChatQuery('What is our fleet utilization and active vehicles count?')">
+          <div class="card-icon-pill icon-cyan">🚗</div>
+          <div class="card-text-block">
+            <div class="card-title">Fleet Utilization & Vehicle Status</div>
+            <div class="card-desc">Active rentals, yard availability, top vehicle makes and models in demand</div>
+          </div>
+          <div class="card-arrow">→</div>
+        </button>
+
+        <button type="button" class="hero-prompt-card" onclick="sendChatQuery('Which invoices are overdue and pending payment collection?')">
+          <div class="card-icon-pill icon-amber">⚠️</div>
+          <div class="card-text-block">
+            <div class="card-title">Overdue Invoices & Receivables</div>
+            <div class="card-desc">Outstanding customer balances, overdue collections and settlement rates</div>
+          </div>
+          <div class="card-arrow">→</div>
+        </button>
+
+        <button type="button" class="hero-prompt-card" onclick="sendChatQuery('What are our bank accounts and cash liquidity balances?')">
+          <div class="card-icon-pill icon-purple">💰</div>
+          <div class="card-text-block">
+            <div class="card-title">Bank Accounts & Cash Liquidity</div>
+            <div class="card-desc">Operational treasury accounts, liquid balances and masked account security</div>
+          </div>
+          <div class="card-arrow">→</div>
+        </button>
       </div>
     </div>
   `;
+  const input = document.getElementById("chat-input");
+  if (input) input.focus();
 }
 
 function appendUserMessage(text) {
+  const hero = document.getElementById("welcome-hero");
+  if (hero) hero.remove();
+
   const container = document.getElementById("chat-messages");
   const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const bubble = document.createElement("div");
   bubble.className = "web-chat-bubble web-bubble-user";
   bubble.innerHTML = `
-    <div class="user-avatar" style="width: 38px; height: 38px; background: #334155;">👤</div>
+    <div class="user-avatar" style="width: 36px; height: 36px; background: #334155; font-size: 16px;">👤</div>
     <div class="web-bubble-card">
-      <div>${escapeHtml(text)}</div>
-      <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: right;">${timeStr}</div>
+      <div style="font-size: 13.5px; line-height: 1.5;">${escapeHtml(text)}</div>
+      <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px; text-align: right;">${timeStr}</div>
     </div>
   `;
   container.appendChild(bubble);
@@ -151,9 +300,10 @@ function appendTypingIndicator() {
   typing.id = "typing-bubble";
   typing.className = "web-chat-bubble web-bubble-ai";
   typing.innerHTML = `
-    <div class="user-avatar" style="width: 38px; height: 38px;">⚡</div>
-    <div class="web-bubble-card" style="color: var(--accent-lime); font-size: 13px;">
-      <span>{{ t.server_initializing }}</span>
+    <div class="user-avatar" style="width: 36px; height: 36px; font-size: 17px; background: rgba(204, 255, 0, 0.15); border: 1px solid var(--accent-lime);">🤖</div>
+    <div class="web-bubble-card" style="color: var(--accent-lime); font-size: 13px; display: flex; align-items: center; gap: 10px;">
+      <span class="pulse-dot"></span>
+      <span>Consulting Claude & Arrendadora Ola Cars ERP...</span>
     </div>
   `;
   container.appendChild(typing);
@@ -172,127 +322,303 @@ function escapeHtml(string) {
   });
 }
 
+function formatExecutiveText(text) {
+  if (!text) return "";
+  const lines = text.split("\n");
+  const processed = [];
+  let inTable = false;
+  let inList = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+
+    // Check if table row: starts and ends with |
+    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+      if (inList) {
+        processed.push("</ul>");
+        inList = false;
+      }
+      if (/^\|[-:\s|]+\|$/.test(trimmed)) {
+        continue;
+      }
+      const cells = trimmed.split("|").slice(1, -1).map(c => c.trim());
+      if (!inTable) {
+        inTable = true;
+        processed.push('<div style="overflow-x: auto; margin: 12px 0;"><table class="enterprise-table"><thead><tr>');
+        for (const cell of cells) {
+          processed.push(`<th>${escapeHtml(cell).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</th>`);
+        }
+        processed.push('</tr></thead><tbody>');
+      } else {
+        processed.push('<tr>');
+        for (const cell of cells) {
+          processed.push(`<td>${escapeHtml(cell).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</td>`);
+        }
+        processed.push('</tr>');
+      }
+      continue;
+    } else {
+      if (inTable) {
+        processed.push('</tbody></table></div>');
+        inTable = false;
+      }
+    }
+
+    // Check for Headings
+    if (trimmed.startsWith("### ")) {
+      if (inList) { processed.push("</ul>"); inList = false; }
+      processed.push(`<h4 style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin: 12px 0 6px 0;">${escapeHtml(trimmed.substring(4))}</h4>`);
+      continue;
+    }
+    if (trimmed.startsWith("## ")) {
+      if (inList) { processed.push("</ul>"); inList = false; }
+      processed.push(`<h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 14px 0 6px 0;">${escapeHtml(trimmed.substring(3))}</h3>`);
+      continue;
+    }
+    if (trimmed.startsWith("# ")) {
+      if (inList) { processed.push("</ul>"); inList = false; }
+      processed.push(`<h2 style="font-size: 16px; font-weight: 800; color: var(--accent-lime); margin: 16px 0 8px 0;">${escapeHtml(trimmed.substring(2))}</h2>`);
+      continue;
+    }
+
+    // Check for Bullet Lists
+    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      if (!inList) {
+        processed.push('<ul style="padding-left: 20px; margin: 8px 0; line-height: 1.6;">');
+        inList = true;
+      }
+      let content = escapeHtml(trimmed.substring(2));
+      content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      processed.push(`<li style="margin-bottom: 4px;">${content}</li>`);
+      continue;
+    } else {
+      if (inList) {
+        processed.push("</ul>");
+        inList = false;
+      }
+    }
+
+    if (!trimmed) {
+      processed.push('<div style="height: 6px;"></div>');
+      continue;
+    }
+
+    let escaped = escapeHtml(rawLine);
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    processed.push(`<div>${escaped}</div>`);
+  }
+
+  if (inTable) processed.push('</tbody></table></div>');
+  if (inList) processed.push("</ul>");
+
+  return processed.join("");
+}
+
+function copyResponse(btn, rawText) {
+  if (!rawText) return;
+  navigator.clipboard.writeText(rawText).then(() => {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span>✓</span> <span>Copied!</span>`;
+    btn.style.color = "var(--accent-lime)";
+    btn.style.borderColor = "var(--accent-lime)";
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.style.color = "";
+      btn.style.borderColor = "";
+    }, 2000);
+  }).catch(() => {});
+}
+
 function appendAiResponse(data) {
   removeTypingIndicator();
+  const hero = document.getElementById("welcome-hero");
+  if (hero) hero.remove();
+
   const container = document.getElementById("chat-messages");
   const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const bubble = document.createElement("div");
   bubble.className = "web-chat-bubble web-bubble-ai";
 
-  let bodyHtml = `<p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">${escapeHtml(data.message || "")}</p>`;
+  let bodyHtml = `<div style="font-size: 13.5px; line-height: 1.6; color: var(--text-primary); margin-bottom: 14px;">${formatExecutiveText(data.message || "")}</div>`;
+
+  // Render KPI Summary Card if provided
+  if (data.summary_kpi) {
+    bodyHtml += `
+      <div style="display: inline-flex; align-items: center; gap: 12px; background: rgba(204, 255, 0, 0.08); border: 1px solid rgba(204, 255, 0, 0.25); border-radius: 10px; padding: 10px 18px; margin-bottom: 14px;">
+        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700;">${escapeHtml(data.summary_kpi.label || "KPI")}:</span>
+        <span style="font-size: 17px; font-weight: 800; color: var(--accent-lime);">${escapeHtml(data.summary_kpi.value || "")}</span>
+        ${data.summary_kpi.trend ? `<span style="font-size: 11px; background: rgba(204, 255, 0, 0.2); color: var(--accent-lime); padding: 2px 8px; border-radius: 12px; font-weight: 700;">${escapeHtml(data.summary_kpi.trend)}</span>` : ""}
+      </div>
+    `;
+  }
 
   // Handle Chart & Table Response
-  if (data.response_type === "chart_and_table" || (data.chart_data && data.table_data)) {
-    const chartId = `web-chart-bar-${++chartCounter}`;
+  const hasChart = data.chart_data && data.chart_data.labels && data.chart_data.labels.length > 0;
+  const tableRows = data.table_data || data.data || [];
+  const tableCols = data.table_columns || data.columns || (tableRows.length > 0 ? Object.keys(tableRows[0]) : []);
+
+  if (hasChart) {
+    const chartId = `web-chart-dyn-${++chartCounter}`;
+    const chartType = (data.chart_type || "bar").toLowerCase();
     bodyHtml += `
       <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-          <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${escapeHtml(data.title || "Monthly Revenue")}</span>
-          <span class="system-status-indicator" style="font-size: 10px;">6M Time Range</span>
+          <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${escapeHtml(data.title || "Live Business Visualization")}</span>
+          <span class="system-status-indicator" style="font-size: 10px; text-transform: uppercase;">${escapeHtml(chartType)} Chart</span>
         </div>
-        <div style="height: 220px; position: relative;">
+        <div style="height: 250px; position: relative;">
           <canvas id="${chartId}"></canvas>
         </div>
-      </div>
-      
-      <div style="overflow-x: auto; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-        <table class="enterprise-table">
-          <thead>
-            <tr>
-              <th>{{ t.table_month }}</th>
-              <th>{{ t.table_revenue }}</th>
-              <th>{{ t.table_growth }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${data.table_data.map(row => `
-              <tr>
-                <td style="font-weight: 700;">${escapeHtml(row.month)}</td>
-                <td>${escapeHtml(row.revenue)}</td>
-                <td style="color: ${row.growth.includes('↑') ? 'var(--color-green)' : 'var(--text-muted)'}; font-weight: 700;">
-                  ${escapeHtml(row.growth)}
-                </td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
       </div>
     `;
 
     setTimeout(() => {
       const ctx = document.getElementById(chartId);
       if (ctx) {
-        new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: data.chart_data.labels,
-            datasets: [{
-              data: data.chart_data.values,
-              backgroundColor: "#ccff00",
-              borderRadius: 6,
-              barThickness: 32,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
-              y: {
-                grid: { color: "rgba(255,255,255,0.06)" },
-                ticks: {
-                  color: "#8e9da8",
-                  font: { size: 11 },
-                  callback: (v) => (v >= 1000 ? v / 1000 + "K" : v)
+        const labels = data.chart_data.labels;
+        const values = data.chart_data.values;
+        const palette = ["#ccff00", "#00e5ff", "#ff3b30", "#ffd600", "#bf5af2", "#30d158", "#ff9f0a", "#8e8e93"];
+
+        if (chartType === "pie" || chartType === "doughnut") {
+          new Chart(ctx, {
+            type: chartType,
+            data: {
+              labels: labels,
+              datasets: [{
+                data: values,
+                backgroundColor: palette.slice(0, labels.length),
+                borderColor: "#11161d",
+                borderWidth: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "right",
+                  labels: { color: "#8e9da8", font: { size: 11 }, boxWidth: 12 }
                 }
               }
             }
-          }
-        });
+          });
+        } else if (chartType === "line") {
+          const chartContext = ctx.getContext("2d");
+          const gradient = chartContext.createLinearGradient(0, 0, 0, 220);
+          gradient.addColorStop(0, "rgba(204, 255, 0, 0.35)");
+          gradient.addColorStop(1, "rgba(204, 255, 0, 0.0)");
+
+          new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [{
+                label: data.title || "Value",
+                data: values,
+                borderColor: "#ccff00",
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.35,
+                borderWidth: 3,
+                pointBackgroundColor: "#ccff00",
+                pointRadius: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
+                y: {
+                  grid: { color: "rgba(255,255,255,0.06)" },
+                  ticks: {
+                    color: "#8e9da8",
+                    font: { size: 11 },
+                    callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
+                  }
+                }
+              }
+            }
+          });
+        } else {
+          new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: labels,
+              datasets: [{
+                data: values,
+                backgroundColor: "#ccff00",
+                borderRadius: 6,
+                barThickness: Math.max(16, Math.min(36, Math.floor(420 / (labels.length || 1)))),
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
+                y: {
+                  grid: { color: "rgba(255,255,255,0.06)" },
+                  ticks: {
+                    color: "#8e9da8",
+                    font: { size: 11 },
+                    callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
+                  }
+                }
+              }
+            }
+          });
+        }
       }
-    }, 80);
-  } else if (data.response_type === "table" && data.columns && data.data) {
+    }, 60);
+  }
+
+  // Render Table if available
+  if (tableRows.length > 0 && tableCols.length > 0) {
     bodyHtml += `
-      <div style="overflow-x: auto; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="overflow-x: auto; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 10px;">
         <table class="enterprise-table">
           <thead>
-            <tr>${data.columns.map(c => `<th>${escapeHtml(c)}</th>`).join("")}</tr>
+            <tr>${tableCols.map(c => `<th>${escapeHtml(c)}</th>`).join("")}</tr>
           </thead>
           <tbody>
-            ${data.data.map(row => `
-              <tr>${data.columns.map(c => `<td>${escapeHtml(row[c] || "")}</td>`).join("")}</tr>
+            ${tableRows.slice(0, 15).map(row => `
+              <tr>
+                ${tableCols.map(c => `
+                  <td>${escapeHtml(row[c] !== undefined ? row[c] : "")}</td>
+                `).join("")}
+              </tr>
             `).join("")}
           </tbody>
         </table>
       </div>
     `;
-  } else if (data.response_type === "kpi_list" && data.items) {
-    bodyHtml += `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 10px;">
-        ${data.items.map(it => `
-          <div style="background: var(--bg-secondary); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-              <div style="font-weight: 700; font-size: 13.5px;">${escapeHtml(it.name)}</div>
-              <div style="color: var(--accent-lime); font-weight: 800; font-size: 15px;">${it.utilization}</div>
-            </div>
-            <div style="font-size: 11px; color: var(--text-secondary);">${it.bookings} bookings • ${it.status}</div>
-          </div>
-        `).join("")}
-      </div>
-    `;
   }
 
-  // Live Query Metadata Bar
+  // Live Query Metadata Bar with Copy Action
+  const aiEngine = (data.data_source_info && data.data_source_info.ai_engine) || "Claude (Anthropic API)";
+  const execTime = (data.data_source_info && data.data_source_info.execution_time_ms) || "25";
+  const rawTextForCopy = data.message || "";
+  
   bodyHtml += `
     <div style="margin-top: 14px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 8px;">
-      <span>🔒 {{ t.live_query_info }}</span>
-      <span>${timeStr}</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="color: var(--accent-lime); font-weight: 600;">✨ ${escapeHtml(aiEngine)}</span>
+        <span>•</span>
+        <span>${execTime}ms • ${timeStr}</span>
+      </div>
+      <button type="button" class="chat-copy-btn" onclick="copyResponse(this, \`${escapeHtml(rawTextForCopy).replace(/`/g, '\\`')}\`)" title="Copy reply">
+        <span>📋</span>
+        <span>Copy</span>
+      </button>
     </div>
   `;
 
   bubble.innerHTML = `
-    <div class="user-avatar" style="width: 38px; height: 38px;">🤖</div>
+    <div class="user-avatar" style="width: 36px; height: 36px; font-size: 17px; background: rgba(204, 255, 0, 0.15); border: 1px solid var(--accent-lime);">🤖</div>
     <div class="web-bubble-card">
       ${bodyHtml}
     </div>
@@ -300,17 +626,15 @@ function appendAiResponse(data) {
 
   container.appendChild(bubble);
   scrollToBottom();
-  setTimeout(() => {
-    if (window.initEnterpriseTables) {
-      window.initEnterpriseTables(bubble);
-    }
-  }, 100);
+  setTimeout(scrollToBottom, 100);
 }
 
 async function sendChatQuery(prompt) {
   if (!prompt || !prompt.trim()) return;
   appendUserMessage(prompt);
   appendTypingIndicator();
+
+  chatHistory.push({ role: "user", content: prompt });
 
   try {
     const res = await fetch("{% url 'dashboard:chat_api' %}", {
@@ -319,15 +643,22 @@ async function sendChatQuery(prompt) {
         "Content-Type": "application/json",
         "X-CSRFToken": "{{ csrf_token }}"
       },
-      body: JSON.stringify({ prompt: prompt })
+      body: JSON.stringify({
+        prompt: prompt,
+        history: chatHistory
+      })
     });
     const data = await res.json();
     appendAiResponse(data);
+
+    if (data.message) {
+      chatHistory.push({ role: "assistant", content: data.message });
+    }
   } catch (err) {
     removeTypingIndicator();
     appendAiResponse({
       status: "error",
-      message: "Connection failed. Please ensure the backend is running.",
+      message: "Connection failed. Please ensure the backend server is running.",
     });
   }
 }
@@ -348,6 +679,41 @@ window.addEventListener("DOMContentLoaded", () => {
   const initPrompt = urlParams.get("prompt");
   if (initPrompt) {
     sendChatQuery(initPrompt);
+  }
+
+  // Voice Speech Recognition
+  const micBtn = document.getElementById("mic-btn");
+  if (micBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRec();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "{{ lang }}" === "es" ? "es-ES" : "en-US";
+
+    let isListening = false;
+    recognition.onstart = () => {
+      isListening = true;
+      micBtn.classList.add("recording");
+    };
+    recognition.onend = () => {
+      isListening = false;
+      micBtn.classList.remove("recording");
+    };
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      const input = document.getElementById("chat-input");
+      if (input) {
+        input.value = transcript;
+        input.focus();
+      }
+    };
+    micBtn.addEventListener("click", () => {
+      if (!isListening) {
+        try { recognition.start(); } catch (e) {}
+      } else {
+        try { recognition.stop(); } catch (e) {}
+      }
+    });
   }
 });
 </script>

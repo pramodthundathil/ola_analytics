@@ -5,8 +5,10 @@ Ola Cars AI Superuser & Analytics System.
 
 from pathlib import Path
 import os
+import dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+dotenv.load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-asljd$*klp6f5%$on7iuj^o3wsteheff)(c=lew%^z$%!)lph$")
 
@@ -89,9 +91,22 @@ DATABASES = {
     }
 }
 
-# REST Framework Configuration
+# Cache Configuration - Blazing fast in-memory caching for analytics
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "ola-analytics-cache",
+        "TIMEOUT": 300,  # 5 minutes default
+        "OPTIONS": {
+            "MAX_ENTRIES": 5000
+        }
+    }
+}
+
+# REST Framework & SimpleJWT Configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "api.auth.APIKeyAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
@@ -99,6 +114,19 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer", "JWT"),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
 }
 
 AI_API_KEY = os.getenv("AI_API_KEY", "ola_ai_superuser_key_2026")

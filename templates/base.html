@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="{{ lang }}" data-theme="{{ theme }}">
+<html lang="{{ lang }}" data-theme="{{ theme }}" class="{% if active_nav == 'chat' %}chat-body-locked{% endif %}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,10 +19,10 @@
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
   {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="{% if active_nav == 'chat' %}chat-body-locked{% endif %}">
 
   {% if is_authenticated %}
-  <div class="web-app-container">
+  <div class="web-app-container {% if active_nav == 'chat' %}chat-active-page{% endif %}">
     <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
     
     <!-- Enterprise Left Navigation Sidebar -->
@@ -128,7 +128,7 @@
       </header>
 
       <!-- Dynamic Page Content -->
-      <main class="web-content-body">
+      <main class="web-content-body {% if active_nav == 'chat' %}chat-viewport-body{% endif %}">
         {% block content %}{% endblock %}
       </main>
 

@@ -15,6 +15,9 @@ python-dotenv>=1.0.0
 # Model Context Protocol (MCP) Server
 mcp>=1.0.0
 
+# Anthropic Claude AI SDK
+anthropic>=0.40.0
+
 # HTTP Requests & Utilities
 requests>=2.31.0
 
