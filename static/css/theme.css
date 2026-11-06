@@ -1527,6 +1527,209 @@ body.chat-body-locked .web-content-body.chat-viewport-body,
 }
 
 /* ==========================================================================
+   Chat & AI Assistant Light Theme Customization
+   ========================================================================== */
+[data-theme="light"] .chat-full-canvas {
+  background: #f8fafc !important;
+}
+
+[data-theme="light"] .chat-header-toolbar {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .chat-thread-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] .hero-prompt-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+}
+
+[data-theme="light"] .hero-prompt-card:hover {
+  background: #f8fafc !important;
+  border-color: #84cc16 !important;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08) !important;
+}
+
+[data-theme="light"] .card-icon-pill {
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .card-title {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .card-desc {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .card-arrow {
+  color: #94a3b8 !important;
+}
+
+[data-theme="light"] .hero-prompt-card:hover .card-arrow {
+  color: #65a30d !important;
+}
+
+/* User Bubble in Light Theme - Clean Executive Look with No Black Box Bleed */
+[data-theme="light"] .web-bubble-user .web-bubble-card {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* AI Bubble in Light Theme */
+[data-theme="light"] .web-bubble-ai .web-bubble-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Querying Card in Light Theme - High-End Light Card without Dark Gradient */
+[data-theme="light"] .querying-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid rgba(132, 204, 22, 0.45) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 0 16px rgba(132, 204, 22, 0.12) !important;
+}
+
+[data-theme="light"] .querying-step-text {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .querying-step-icon {
+  color: #65a30d !important;
+}
+
+[data-theme="light"] .querying-progress-line {
+  background: linear-gradient(90deg, transparent, #84cc16, #06b6d4, transparent) !important;
+}
+
+[data-theme="light"] .typing-dot {
+  background: #65a30d !important;
+}
+
+[data-theme="light"] .typing-cursor {
+  color: #65a30d !important;
+}
+
+/* Avatar Badges */
+.chat-avatar-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.chat-avatar-ai {
+  background: rgba(204, 255, 0, 0.12);
+  border: 1px solid rgba(204, 255, 0, 0.35);
+  color: var(--accent-lime);
+  box-shadow: 0 0 12px rgba(204, 255, 0, 0.15);
+}
+
+[data-theme="light"] .chat-avatar-ai {
+  background: rgba(132, 204, 22, 0.14) !important;
+  border: 1px solid rgba(132, 204, 22, 0.4) !important;
+  color: #65a30d !important;
+  box-shadow: 0 2px 8px rgba(132, 204, 22, 0.2) !important;
+}
+
+.chat-avatar-user {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+}
+
+[data-theme="light"] .chat-avatar-user {
+  background: #0f172a !important;
+  border: 1px solid #1e293b !important;
+  color: #f8fafc !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Bottom Input Dock in Light Theme */
+[data-theme="light"] .chat-bottom-dock {
+  background: #ffffff !important;
+  border-top: 1px solid #e2e8f0 !important;
+  box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.05) !important;
+}
+
+[data-theme="light"] .chat-chip-btn {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+[data-theme="light"] .chat-chip-btn:hover {
+  background: #ffffff !important;
+  border-color: #84cc16 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+}
+
+[data-theme="light"] .web-input-capsule {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+
+[data-theme="light"] .web-input-capsule:focus-within {
+  background: #ffffff !important;
+  border-color: #84cc16 !important;
+  box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.18), inset 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+
+[data-theme="light"] .chat-mic-btn {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+[data-theme="light"] .chat-mic-btn:hover {
+  background: rgba(132, 204, 22, 0.14) !important;
+  border-color: rgba(132, 204, 22, 0.3) !important;
+  color: #4d7c0f !important;
+}
+
+[data-theme="light"] .chat-copy-btn {
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+[data-theme="light"] .chat-copy-btn:hover {
+  background: rgba(132, 204, 22, 0.12) !important;
+  border-color: #84cc16 !important;
+  color: #4d7c0f !important;
+}
+
+[data-theme="light"] .chat-offcanvas-drawer {
+  background: #ffffff !important;
+  border-left: 1px solid #e2e8f0 !important;
+  box-shadow: -10px 0 35px rgba(15, 23, 42, 0.12) !important;
+}
+
+[data-theme="light"] .drawer-prompt-item {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .drawer-prompt-item:hover {
+  background: #ffffff !important;
+  border-color: #84cc16 !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* ==========================================================================
    Enterprise Analytics BI Screen
    ========================================================================== */
 .analytics-filter-toolbar {

@@ -746,6 +746,54 @@ class ClaudeChatService:
         return None
 
     @classmethod
+    def extract_charts_from_text(cls, text: str) -> Tuple[str, List[Dict[str, Any]]]:
+        """
+        Detects and extracts ```chart { ... } ``` or ```json { ... } ``` blocks from Claude's response.
+        Returns:
+            (clean_text, list_of_chart_configs)
+        """
+        if not text:
+            return text, []
+
+        charts = []
+        clean_text = text
+        chart_pattern = re.compile(r"```(?:chart|chart\.js|json)?\s*(\{[\s\S]*?\})\s*```", re.IGNORECASE)
+
+        for match in chart_pattern.finditer(text):
+            raw_code = match.group(0)
+            json_str = match.group(1).strip()
+            try:
+                parsed = json.loads(json_str)
+                if isinstance(parsed, dict) and ("type" in parsed or "chart_type" in parsed):
+                    ctype = parsed.get("type") or parsed.get("chart_type") or "bar"
+                    title = parsed.get("title", "Business Visualization")
+                    data_field = parsed.get("data")
+                    labels, values = [], []
+                    if isinstance(data_field, list):
+                        for item in data_field:
+                            if isinstance(item, dict):
+                                labels.append(str(item.get("label") or item.get("name") or ""))
+                                values.append(item.get("value", 0))
+                    elif isinstance(data_field, dict):
+                        labels = data_field.get("labels", [])
+                        values = data_field.get("values", [])
+                    elif "labels" in parsed and "values" in parsed:
+                        labels = parsed.get("labels", [])
+                        values = parsed.get("values", [])
+
+                    if labels and values:
+                        charts.append({
+                            "chart_type": str(ctype).lower(),
+                            "title": str(title),
+                            "chart_data": {"labels": labels, "values": values}
+                        })
+                        clean_text = clean_text.replace(raw_code, "").strip()
+            except Exception:
+                pass
+
+        return clean_text, charts
+
+    @classmethod
     def generate_response(
         cls,
         prompt: str,
@@ -969,6 +1017,12 @@ class ClaudeChatService:
 
         # Build final response payload
         exec_time = round((time.time() - start_time) * 1000, 2)
+
+        # Detect and extract any charts Claude embedded in markdown ```chart ... ``` blocks
+        clean_msg, extracted_charts = cls.extract_charts_from_text(executive_message or "")
+        if extracted_charts:
+            executive_message = clean_msg
+
         response_payload = {
             "status": "success",
             "message": executive_message or "Executive ERP query completed.",
@@ -979,6 +1033,15 @@ class ClaudeChatService:
                 "cached": False
             }
         }
+
+        # If Claude directly generated charts in its response, provide them directly
+        if extracted_charts:
+            response_payload["charts"] = extracted_charts
+            response_payload["response_type"] = "chart_and_table"
+            response_payload["chart_type"] = extracted_charts[0]["chart_type"]
+            response_payload["title"] = extracted_charts[0]["title"]
+            response_payload["chart_data"] = extracted_charts[0]["chart_data"]
+            return response_payload
 
         # Check whether user explicitly asked for a chart or visualization
         prompt_lower = prompt.lower()

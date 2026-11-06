@@ -43,6 +43,12 @@
   border-radius: 4px 18px 18px 18px !important;
 }
 
+[data-theme="light"] .querying-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid rgba(132, 204, 22, 0.45) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 0 16px rgba(132, 204, 22, 0.12) !important;
+}
+
 .querying-step-container {
   display: flex;
   align-items: center;
@@ -54,7 +60,10 @@
 }
 
 .querying-step-icon {
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   animation: queryPulseGlow 1.8s infinite ease-in-out;
 }
 
@@ -62,6 +71,10 @@
   transition: opacity 0.25s ease, transform 0.25s ease;
   color: var(--text-primary);
   letter-spacing: -0.1px;
+}
+
+[data-theme="light"] .querying-step-text {
+  color: #0f172a !important;
 }
 
 .querying-progress-line {
@@ -73,6 +86,10 @@
   background: linear-gradient(90deg, transparent, var(--accent-lime), #00e5ff, transparent);
   background-size: 200% 100%;
   animation: queryShimmer 2s infinite linear;
+}
+
+[data-theme="light"] .querying-progress-line {
+  background: linear-gradient(90deg, transparent, #84cc16, #06b6d4, transparent) !important;
 }
 
 .typing-dot {
@@ -87,12 +104,59 @@
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
+[data-theme="light"] .typing-dot {
+  background: #65a30d !important;
+}
+
 .typing-cursor {
   display: inline-block;
   color: var(--accent-lime);
   font-weight: 900;
   margin-left: 2px;
   animation: textCursorBlink 0.7s infinite;
+}
+
+[data-theme="light"] .typing-cursor {
+  color: #65a30d !important;
+}
+
+/* Avatar Badges */
+.chat-avatar-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.chat-avatar-ai {
+  background: rgba(204, 255, 0, 0.12);
+  border: 1px solid rgba(204, 255, 0, 0.35);
+  color: var(--accent-lime);
+  box-shadow: 0 0 12px rgba(204, 255, 0, 0.15);
+}
+
+[data-theme="light"] .chat-avatar-ai {
+  background: rgba(132, 204, 22, 0.14) !important;
+  border: 1px solid rgba(132, 204, 22, 0.4) !important;
+  color: #65a30d !important;
+  box-shadow: 0 2px 8px rgba(132, 204, 22, 0.2) !important;
+}
+
+.chat-avatar-user {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+}
+
+[data-theme="light"] .chat-avatar-user {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
 }
 
 .enter-fade-up {
@@ -135,7 +199,7 @@
       </button>
 
       <button type="button" class="chat-btn-secondary" onclick="togglePromptDrawer()" title="View Query Templates">
-        <span>⚡</span>
+        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
         <span>Templates (5)</span>
       </button>
     </div>
@@ -160,7 +224,9 @@
       <div class="welcome-cards-grid">
         <!-- Card 1: Revenue -->
         <button type="button" class="hero-prompt-card" onclick="sendChatQuery('Show monthly revenue trend with chart for last 6 months')">
-          <div class="card-icon-pill icon-emerald">📊</div>
+          <div class="card-icon-pill icon-emerald">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #22c55e;"><path d="M4 19h16v2H2V3h2v16zm4-7h2v5H8v-5zm4-4h2v9h-2V8zm4-4h2v13h-2V4z"/></svg>
+          </div>
           <div class="card-text-block">
             <div class="card-title">Revenue & Monthly Collections</div>
             <div class="card-desc">Trends, MoM growth rates, bank transfer payments across last 6 months</div>
@@ -170,7 +236,9 @@
 
         <!-- Card 2: Fleet -->
         <button type="button" class="hero-prompt-card" onclick="sendChatQuery('What is our fleet utilization and active vehicles count?')">
-          <div class="card-icon-pill icon-cyan">🚗</div>
+          <div class="card-icon-pill icon-cyan">
+            <svg viewBox="0 0 24 24" style="width: 21px; height: 21px; fill: #06b6d4;"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/><circle cx="7.5" cy="14.5" r="1.5"/><circle cx="16.5" cy="14.5" r="1.5"/></svg>
+          </div>
           <div class="card-text-block">
             <div class="card-title">Fleet Utilization & Vehicle Status</div>
             <div class="card-desc">Active rentals, yard availability, top vehicle makes and models in demand</div>
@@ -180,7 +248,9 @@
 
         <!-- Card 3: Receivables -->
         <button type="button" class="hero-prompt-card" onclick="sendChatQuery('Which invoices are overdue and pending payment collection?')">
-          <div class="card-icon-pill icon-amber">⚠️</div>
+          <div class="card-icon-pill icon-amber">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #f59e0b;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          </div>
           <div class="card-text-block">
             <div class="card-title">Overdue Invoices & Receivables</div>
             <div class="card-desc">Outstanding customer balances, overdue collections and settlement rates</div>
@@ -190,7 +260,9 @@
 
         <!-- Card 4: Bank Liquidity -->
         <button type="button" class="hero-prompt-card" onclick="sendChatQuery('What are our bank accounts and cash liquidity balances?')">
-          <div class="card-icon-pill icon-purple">💰</div>
+          <div class="card-icon-pill icon-purple">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #a855f7;"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>
+          </div>
           <div class="card-text-block">
             <div class="card-title">Bank Accounts & Cash Liquidity</div>
             <div class="card-desc">Operational treasury accounts, liquid balances and masked account security</div>
@@ -208,27 +280,27 @@
     <!-- Quick Horizontal Suggestion Chips Carousel -->
     <div class="chat-quick-chips-bar">
       <button type="button" class="chat-chip-btn" onclick="sendChatQuery('Show monthly revenue trend with chart')">
-        <span>📊</span>
+        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
         <span>Revenue Trend</span>
       </button>
       <button type="button" class="chat-chip-btn" onclick="sendChatQuery('What is our fleet utilization and active vehicles?')">
-        <span>🚗</span>
+        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3z"/></svg>
         <span>Fleet Utilization</span>
       </button>
       <button type="button" class="chat-chip-btn" onclick="sendChatQuery('Which invoices are overdue and pending payment?')">
-        <span>⚠️</span>
+        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2V7h2v4zm0 4h-2v-2h2v2z"/></svg>
         <span>Overdue Invoices</span>
       </button>
       <button type="button" class="chat-chip-btn" onclick="sendChatQuery('Show vendor bills status and supplier payables')">
-        <span>🏢</span>
+        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
         <span>Vendor Bills</span>
       </button>
       <button type="button" class="chat-chip-btn" onclick="sendChatQuery('What are our bank accounts and cash balances?')">
-        <span>💰</span>
+        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>
         <span>Bank Liquidity</span>
       </button>
       <button type="button" class="chat-chip-btn" onclick="sendChatQuery('Show operating expenses and monthly burn rate')">
-        <span>📉</span>
+        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
         <span>Expense Burn</span>
       </button>
     </div>
@@ -254,7 +326,7 @@
   <aside id="chat-offcanvas-drawer" class="chat-offcanvas-drawer">
     <div class="drawer-header">
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 16px;">⚡</span>
+        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: var(--accent-lime); flex-shrink: 0;"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
         <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Executive Query Templates</span>
       </div>
       <button type="button" class="btn-icon" onclick="togglePromptDrawer()" aria-label="Close Drawer" style="font-size: 16px;">✕</button>
@@ -262,32 +334,50 @@
     
     <div class="drawer-body">
       <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_chart_revenue }}')">
-        <div class="drawer-prompt-title">📊 {{ t.prompt_chart_revenue }}</div>
+        <div class="drawer-prompt-title">
+          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: #22c55e; flex-shrink: 0;"><path d="M4 19h16v2H2V3h2v16zm4-7h2v5H8v-5zm4-4h2v9h-2V8zm4-4h2v13h-2V4z"/></svg>
+          <span>{{ t.prompt_chart_revenue }}</span>
+        </div>
         <div class="drawer-prompt-desc">Calculates monthly revenue, bank deposits and MoM changes with chart</div>
       </button>
 
       <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_overdue }}')">
-        <div class="drawer-prompt-title">⚠️ {{ t.prompt_overdue }}</div>
+        <div class="drawer-prompt-title">
+          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: #f59e0b; flex-shrink: 0;"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2V7h2v4zm0 4h-2v-2h2v2z"/></svg>
+          <span>{{ t.prompt_overdue }}</span>
+        </div>
         <div class="drawer-prompt-desc">Analyzes customer invoices past due date and open debt balances</div>
       </button>
 
       <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_top_vehicles }}')">
-        <div class="drawer-prompt-title">🚗 {{ t.prompt_top_vehicles }}</div>
+        <div class="drawer-prompt-title">
+          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: #06b6d4; flex-shrink: 0;"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3z"/></svg>
+          <span>{{ t.prompt_top_vehicles }}</span>
+        </div>
         <div class="drawer-prompt-desc">Breaks down fleet by model, rental demand, and yard availability</div>
       </button>
 
       <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_last_month }}')">
-        <div class="drawer-prompt-title">📅 {{ t.prompt_last_month }}</div>
+        <div class="drawer-prompt-title">
+          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: #a855f7; flex-shrink: 0;"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+          <span>{{ t.prompt_last_month }}</span>
+        </div>
         <div class="drawer-prompt-desc">Retrieves total payment collections and verified transactions last month</div>
       </button>
 
       <button type="button" class="drawer-prompt-item" onclick="selectTemplate('{{ t.prompt_new_registrations }}')">
-        <div class="drawer-prompt-title">📝 {{ t.prompt_new_registrations }}</div>
+        <div class="drawer-prompt-title">
+          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: #38bdf8; flex-shrink: 0;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          <span>{{ t.prompt_new_registrations }}</span>
+        </div>
         <div class="drawer-prompt-desc">Lists recent vehicle registrations and fleet additions</div>
       </button>
 
       <div style="background: rgba(204, 255, 0, 0.05); border: 1px solid rgba(204, 255, 0, 0.2); border-radius: var(--radius-md); padding: 12px; margin-top: 10px; font-size: 11.5px; color: var(--text-muted);">
-        <div style="color: var(--accent-lime); font-weight: 700; margin-bottom: 4px;">🔒 Read-Only Safety Layer</div>
+        <div style="color: var(--accent-lime); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Read-Only Safety Layer</span>
+        </div>
         Live ERP access protected by QueryValidator with 10s timeout, masked credentials, and SELECT-only security.
       </div>
     </div>
@@ -342,7 +432,9 @@ function clearChatMessages() {
 
       <div class="welcome-cards-grid">
         <button type="button" class="hero-prompt-card" onclick="sendChatQuery('Show monthly revenue trend with chart for last 6 months')">
-          <div class="card-icon-pill icon-emerald">📊</div>
+          <div class="card-icon-pill icon-emerald">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #22c55e;"><path d="M4 19h16v2H2V3h2v16zm4-7h2v5H8v-5zm4-4h2v9h-2V8zm4-4h2v13h-2V4z"/></svg>
+          </div>
           <div class="card-text-block">
             <div class="card-title">Revenue & Monthly Collections</div>
             <div class="card-desc">Trends, MoM growth rates, bank transfer payments across last 6 months</div>
@@ -351,7 +443,9 @@ function clearChatMessages() {
         </button>
 
         <button type="button" class="hero-prompt-card" onclick="sendChatQuery('What is our fleet utilization and active vehicles count?')">
-          <div class="card-icon-pill icon-cyan">🚗</div>
+          <div class="card-icon-pill icon-cyan">
+            <svg viewBox="0 0 24 24" style="width: 21px; height: 21px; fill: #06b6d4;"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/><circle cx="7.5" cy="14.5" r="1.5"/><circle cx="16.5" cy="14.5" r="1.5"/></svg>
+          </div>
           <div class="card-text-block">
             <div class="card-title">Fleet Utilization & Vehicle Status</div>
             <div class="card-desc">Active rentals, yard availability, top vehicle makes and models in demand</div>
@@ -360,7 +454,9 @@ function clearChatMessages() {
         </button>
 
         <button type="button" class="hero-prompt-card" onclick="sendChatQuery('Which invoices are overdue and pending payment collection?')">
-          <div class="card-icon-pill icon-amber">⚠️</div>
+          <div class="card-icon-pill icon-amber">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #f59e0b;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          </div>
           <div class="card-text-block">
             <div class="card-title">Overdue Invoices & Receivables</div>
             <div class="card-desc">Outstanding customer balances, overdue collections and settlement rates</div>
@@ -369,7 +465,9 @@ function clearChatMessages() {
         </button>
 
         <button type="button" class="hero-prompt-card" onclick="sendChatQuery('What are our bank accounts and cash liquidity balances?')">
-          <div class="card-icon-pill icon-purple">💰</div>
+          <div class="card-icon-pill icon-purple">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #a855f7;"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>
+          </div>
           <div class="card-text-block">
             <div class="card-title">Bank Accounts & Cash Liquidity</div>
             <div class="card-desc">Operational treasury accounts, liquid balances and masked account security</div>
@@ -392,10 +490,15 @@ function appendUserMessage(text) {
   const bubble = document.createElement("div");
   bubble.className = "web-chat-bubble web-bubble-user";
   bubble.innerHTML = `
-    <div class="user-avatar" style="width: 36px; height: 36px; background: #334155; font-size: 16px;">👤</div>
+    <div class="chat-avatar-badge chat-avatar-user" title="User">
+      <svg viewBox="0 0 24 24" style="width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </div>
     <div class="web-bubble-card">
       <div style="font-size: 13.5px; line-height: 1.5;">${escapeHtml(text)}</div>
-      <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px; text-align: right;">${timeStr}</div>
+      <div style="font-size: 10px; opacity: 0.7; margin-top: 5px; text-align: right;">${timeStr}</div>
     </div>
   `;
   container.appendChild(bubble);
@@ -404,12 +507,87 @@ function appendUserMessage(text) {
 
 let typingInterval = null;
 const typingSteps = [
-  { icon: "🔍", text: "Connecting to live ERP database (olaCarsFresh)..." },
-  { icon: "⚡", text: "Invoking ola_car_analytics MCP connector..." },
-  { icon: "📊", text: "Querying invoice ledgers & payment collections..." },
-  { icon: "🛡️", text: "Verifying live records & masking sensitive data..." },
-  { icon: "✨", text: "Claude synthesizing executive briefing & charts..." }
+  {
+    color: "#00e5ff",
+    colorLight: "#0284c7",
+    text: "Connecting to live ERP database (olaCarsFresh)...",
+    iconHtml: `<svg viewBox="0 0 24 24" style="width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`
+  },
+  {
+    color: "#f59e0b",
+    colorLight: "#d97706",
+    text: "Invoking ola_car_analytics MCP connector...",
+    iconHtml: `<svg viewBox="0 0 24 24" style="width: 19px; height: 19px; fill: currentColor;"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>`
+  },
+  {
+    color: "#22c55e",
+    colorLight: "#16a34a",
+    text: "Querying invoice ledgers & payment collections...",
+    iconHtml: `<svg viewBox="0 0 24 24" style="width: 19px; height: 19px; fill: currentColor;"><path d="M4 19h16v2H2V3h2v16zm4-7h2v5H8v-5zm4-4h2v9h-2V8zm4-4h2v13h-2V4z"/></svg>`
+  },
+  {
+    color: "#a855f7",
+    colorLight: "#7c3aed",
+    text: "Verifying live records & masking sensitive data...",
+    iconHtml: `<svg viewBox="0 0 24 24" style="width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`
+  },
+  {
+    color: "#ccff00",
+    colorLight: "#65a30d",
+    text: "Claude synthesizing executive briefing & charts...",
+    iconHtml: `<svg viewBox="0 0 24 24" style="width: 19px; height: 19px; fill: currentColor;"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/></svg>`
+  }
 ];
+
+function updateQueryingStep(typingEl, step) {
+  if (!typingEl) return;
+  const isLight = document.documentElement.getAttribute("data-theme") === "light";
+  const stepColor = isLight ? step.colorLight : step.color;
+
+  const card = typingEl.querySelector(".querying-card");
+  const iconEl = typingEl.querySelector("#querying-icon");
+  const textEl = typingEl.querySelector("#querying-text");
+  const progressLine = typingEl.querySelector(".querying-progress-line");
+  const dots = typingEl.querySelectorAll(".typing-dot");
+
+  if (card) {
+    card.style.borderColor = stepColor;
+    card.style.boxShadow = isLight
+      ? `0 6px 22px rgba(15, 23, 42, 0.08), 0 0 16px ${stepColor}40`
+      : `0 8px 32px rgba(0, 0, 0, 0.5), 0 0 22px ${stepColor}44`;
+    if (isLight) {
+      card.style.background = "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)";
+    } else {
+      card.style.background = "linear-gradient(135deg, rgba(20, 26, 36, 0.95), rgba(15, 20, 28, 0.98))";
+    }
+  }
+
+  if (iconEl) {
+    iconEl.style.color = stepColor;
+    iconEl.style.filter = `drop-shadow(0 0 6px ${stepColor})`;
+    iconEl.innerHTML = step.iconHtml;
+  }
+
+  if (textEl) {
+    textEl.style.opacity = "0";
+    textEl.style.transform = "translateY(-4px)";
+    setTimeout(() => {
+      textEl.textContent = step.text;
+      textEl.style.color = isLight ? "#0f172a" : "#f8fafc";
+      textEl.style.opacity = "1";
+      textEl.style.transform = "translateY(0)";
+    }, 150);
+  }
+
+  if (progressLine) {
+    progressLine.style.background = `linear-gradient(90deg, transparent, ${stepColor}, transparent)`;
+  }
+
+  dots.forEach(dot => {
+    dot.style.background = stepColor;
+    dot.style.boxShadow = `0 0 8px ${stepColor}`;
+  });
+}
 
 function appendTypingIndicator() {
   removeTypingIndicator();
@@ -422,12 +600,17 @@ function appendTypingIndicator() {
   const initial = typingSteps[0];
 
   typing.innerHTML = `
-    <div class="user-avatar" style="width: 36px; height: 36px; font-size: 17px; background: rgba(204, 255, 0, 0.15); border: 1px solid var(--accent-lime);">🤖</div>
+    <div class="chat-avatar-badge chat-avatar-ai" title="Claude AI">
+      <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
+      </svg>
+    </div>
     <div class="web-bubble-card querying-card">
       <div class="querying-step-container">
-        <span id="querying-icon" class="querying-step-icon">${initial.icon}</span>
+        <span id="querying-icon" class="querying-step-icon">${initial.iconHtml}</span>
         <span id="querying-text" class="querying-step-text">${initial.text}</span>
-        <span style="margin-left: auto; display: flex; align-items: center;">
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 4px;">
           <span class="typing-dot"></span>
           <span class="typing-dot"></span>
           <span class="typing-dot"></span>
@@ -437,24 +620,13 @@ function appendTypingIndicator() {
     </div>
   `;
   container.appendChild(typing);
+  updateQueryingStep(typing, initial);
   scrollToBottom();
 
   typingInterval = setInterval(() => {
     stepIdx = (stepIdx + 1) % typingSteps.length;
-    const nextStep = typingSteps[stepIdx];
-    const iconEl = document.getElementById("querying-icon");
-    const textEl = document.getElementById("querying-text");
-    if (textEl && iconEl) {
-      textEl.style.opacity = "0";
-      textEl.style.transform = "translateY(-4px)";
-      setTimeout(() => {
-        iconEl.textContent = nextStep.icon;
-        textEl.textContent = nextStep.text;
-        textEl.style.opacity = "1";
-        textEl.style.transform = "translateY(0)";
-      }, 160);
-    }
-  }, 1600);
+    updateQueryingStep(typing, typingSteps[stepIdx]);
+  }, 1400);
 
   return typing;
 }
@@ -468,13 +640,64 @@ function removeTypingIndicator() {
   if (typing) typing.remove();
 }
 
+function extractChartsFromMarkdown(text) {
+  if (!text) return { cleanText: "", charts: [] };
+
+  const charts = [];
+  let cleanText = text;
+  const chartPattern = /```(?:chart|chart\.js|json)?\s*(\{[\s\S]*?\})\s*```/gi;
+
+  let match;
+  while ((match = chartPattern.exec(text)) !== null) {
+    const rawCode = match[0];
+    const jsonStr = match[1].trim();
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (parsed && typeof parsed === "object" && (parsed.type || parsed.chart_type)) {
+        const ctype = (parsed.type || parsed.chart_type || "bar").toLowerCase();
+        const title = parsed.title || "Business Analytics Visualization";
+        const dataField = parsed.data;
+        let labels = [];
+        let values = [];
+
+        if (Array.isArray(dataField)) {
+          for (const item of dataField) {
+            if (item && typeof item === "object") {
+              labels.push(String(item.label || item.name || ""));
+              values.push(typeof item.value === "number" ? item.value : parseFloat(item.value || 0));
+            }
+          }
+        } else if (dataField && typeof dataField === "object") {
+          labels = dataField.labels || [];
+          values = dataField.values || [];
+        } else if (parsed.labels && parsed.values) {
+          labels = parsed.labels;
+          values = parsed.values;
+        }
+
+        if (labels.length > 0 && values.length > 0) {
+          charts.push({
+            chart_type: ctype,
+            title: title,
+            chart_data: { labels, values }
+          });
+          cleanText = cleanText.replace(rawCode, "").trim();
+        }
+      }
+    } catch (e) {
+      // not chart json
+    }
+  }
+
+  return { cleanText, charts };
+}
+
 function streamTextToElement(element, fullText, onComplete) {
   if (!fullText) {
     if (onComplete) onComplete();
     return;
   }
 
-  // Tokenize by words/spaces
   const tokens = fullText.split(/(\s+)/);
   let currentIndex = 0;
   let currentBuffer = "";
@@ -502,7 +725,6 @@ function streamTextToElement(element, fullText, onComplete) {
       return;
     }
 
-    // Advance by 3 tokens per tick (~20ms) for high-speed fluid reading
     const chunkTokens = tokens.slice(currentIndex, currentIndex + 3);
     currentIndex += 3;
     currentBuffer += chunkTokens.join("");
@@ -524,9 +746,17 @@ function renderChatChart(chartId, chartType, chartData, title) {
   setTimeout(() => {
     const ctx = document.getElementById(chartId);
     if (!ctx) return;
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
     const labels = chartData.labels || [];
     const values = chartData.values || [];
-    const palette = ["#ccff00", "#00e5ff", "#ff3b30", "#ffd600", "#bf5af2", "#30d158", "#ff9f0a", "#8e8e93"];
+    const palette = ["#ccff00", "#00e5ff", "#ff3b30", "#ffd600", "#bf5af2", "#30d158", "#ff9f0a", "#8e8e93", "#38bdf8", "#f43f5e", "#a855f7"];
+    const tickColor = isLight ? "#475569" : "#8e9da8";
+    const gridColor = isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)";
+    const doughnutBorder = isLight ? "#ffffff" : "#11161d";
+    const defaultColor = isLight ? "#84cc16" : "#ccff00";
+
+    const titleLower = (title || "").toLowerCase();
+    const isCurrency = titleLower.includes("revenue") || titleLower.includes("collection") || titleLower.includes("dollar") || titleLower.includes("deposit") || titleLower.includes("bill") || titleLower.includes("expense") || titleLower.includes("invoic") || titleLower.includes("$");
 
     if (chartType === "pie" || chartType === "doughnut") {
       new Chart(ctx, {
@@ -536,7 +766,7 @@ function renderChatChart(chartId, chartType, chartData, title) {
           datasets: [{
             data: values,
             backgroundColor: palette.slice(0, labels.length),
-            borderColor: "#11161d",
+            borderColor: doughnutBorder,
             borderWidth: 2
           }]
         },
@@ -545,8 +775,8 @@ function renderChatChart(chartId, chartType, chartData, title) {
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: "right",
-              labels: { color: "#8e9da8", font: { size: 11 }, boxWidth: 12 }
+              position: window.innerWidth < 640 ? "bottom" : "right",
+              labels: { color: tickColor, font: { size: 11 }, boxWidth: 12 }
             }
           }
         }
@@ -554,7 +784,7 @@ function renderChatChart(chartId, chartType, chartData, title) {
     } else if (chartType === "line") {
       const chartContext = ctx.getContext("2d");
       const gradient = chartContext.createLinearGradient(0, 0, 0, 220);
-      gradient.addColorStop(0, "rgba(204, 255, 0, 0.35)");
+      gradient.addColorStop(0, isLight ? "rgba(132, 204, 22, 0.35)" : "rgba(204, 255, 0, 0.35)");
       gradient.addColorStop(1, "rgba(204, 255, 0, 0.0)");
 
       new Chart(ctx, {
@@ -564,12 +794,12 @@ function renderChatChart(chartId, chartType, chartData, title) {
           datasets: [{
             label: title || "Value",
             data: values,
-            borderColor: "#ccff00",
+            borderColor: defaultColor,
             backgroundColor: gradient,
             fill: true,
             tension: 0.35,
             borderWidth: 3,
-            pointBackgroundColor: "#ccff00",
+            pointBackgroundColor: defaultColor,
             pointRadius: 4
           }]
         },
@@ -578,13 +808,13 @@ function renderChatChart(chartId, chartType, chartData, title) {
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
             y: {
-              grid: { color: "rgba(255,255,255,0.06)" },
+              grid: { color: gridColor },
               ticks: {
-                color: "#8e9da8",
+                color: tickColor,
                 font: { size: 11 },
-                callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
+                callback: (v) => isCurrency ? (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v) : v.toLocaleString()
               }
             }
           }
@@ -597,9 +827,9 @@ function renderChatChart(chartId, chartType, chartData, title) {
           labels: labels,
           datasets: [{
             data: values,
-            backgroundColor: "#ccff00",
+            backgroundColor: palette.slice(0, labels.length),
             borderRadius: 6,
-            barThickness: Math.max(16, Math.min(36, Math.floor(420 / (labels.length || 1)))),
+            barThickness: Math.max(14, Math.min(36, Math.floor(400 / (labels.length || 1)))),
           }]
         },
         options: {
@@ -607,13 +837,21 @@ function renderChatChart(chartId, chartType, chartData, title) {
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
-            y: {
-              grid: { color: "rgba(255,255,255,0.06)" },
+            x: {
+              grid: { display: false },
               ticks: {
-                color: "#8e9da8",
+                color: tickColor,
+                font: { size: 10.5 },
+                maxRotation: 35,
+                minRotation: 0
+              }
+            },
+            y: {
+              grid: { color: gridColor },
+              ticks: {
+                color: tickColor,
                 font: { size: 11 },
-                callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
+                callback: (v) => isCurrency ? (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v) : v.toLocaleString()
               }
             }
           }
@@ -750,7 +988,46 @@ function appendAiResponse(data) {
   const textId = `ai-text-${Date.now()}`;
   const widgetsId = `ai-widgets-${Date.now()}`;
 
-  // Build widgets HTML (KPI, Chart, Table, Metadata Bar)
+  // Check if message text has embedded markdown charts
+  const extracted = extractChartsFromMarkdown(data.message || "");
+  const displayMessage = extracted.cleanText || data.message || "";
+
+  // Collect all charts (from payload charts array, extracted charts, or fallback chart_data)
+  const allCharts = [];
+  if (data.charts && Array.isArray(data.charts)) {
+    for (const c of data.charts) {
+      if (c && c.chart_data) {
+        allCharts.push({
+          id: `web-chart-dyn-${++chartCounter}`,
+          type: (c.chart_type || "bar").toLowerCase(),
+          title: c.title || "Business Analytics Visualization",
+          data: c.chart_data
+        });
+      }
+    }
+  }
+
+  if (extracted.charts && extracted.charts.length > 0) {
+    for (const c of extracted.charts) {
+      allCharts.push({
+        id: `web-chart-dyn-${++chartCounter}`,
+        type: (c.chart_type || "bar").toLowerCase(),
+        title: c.title || "Business Analytics Visualization",
+        data: c.chart_data
+      });
+    }
+  }
+
+  if (allCharts.length === 0 && data.chart_data && data.chart_data.labels && data.chart_data.labels.length > 0) {
+    allCharts.push({
+      id: `web-chart-dyn-${++chartCounter}`,
+      type: (data.chart_type || "bar").toLowerCase(),
+      title: data.title || "Business Analytics Visualization",
+      data: data.chart_data
+    });
+  }
+
+  // Build widgets HTML (KPI, Charts, Table, Metadata Bar)
   let widgetsHtml = "";
 
   // Render KPI Summary Card if provided
@@ -764,30 +1041,24 @@ function appendAiResponse(data) {
     `;
   }
 
-  // Handle Chart & Table Response
-  const hasChart = data.chart_data && data.chart_data.labels && data.chart_data.labels.length > 0;
-  const tableRows = data.table_data || data.data || [];
-  const tableCols = data.table_columns || data.columns || (tableRows.length > 0 ? Object.keys(tableRows[0]) : []);
-  let chartId = null;
-  let chartType = null;
-
-  if (hasChart) {
-    chartId = `web-chart-dyn-${++chartCounter}`;
-    chartType = (data.chart_type || "bar").toLowerCase();
+  // Render each chart
+  for (const c of allCharts) {
     widgetsHtml += `
       <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-          <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${escapeHtml(data.title || "Live Business Visualization")}</span>
-          <span class="system-status-indicator" style="font-size: 10px; text-transform: uppercase;">${escapeHtml(chartType)} Chart</span>
+          <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${escapeHtml(c.title)}</span>
+          <span class="system-status-indicator" style="font-size: 10px; text-transform: uppercase;">${escapeHtml(c.type)} Chart</span>
         </div>
         <div style="height: 250px; position: relative;">
-          <canvas id="${chartId}"></canvas>
+          <canvas id="${c.id}"></canvas>
         </div>
       </div>
     `;
   }
 
   // Render Table if available
+  const tableRows = data.table_data || data.data || [];
+  const tableCols = data.table_columns || data.columns || (tableRows.length > 0 ? Object.keys(tableRows[0]) : []);
   if (tableRows.length > 0 && tableCols.length > 0) {
     widgetsHtml += `
       <div style="overflow-x: auto; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 10px;">
@@ -812,24 +1083,32 @@ function appendAiResponse(data) {
   // Live Query Metadata Bar with Copy Action
   const aiEngine = (data.data_source_info && data.data_source_info.engine) || (data.data_source_info && data.data_source_info.ai_engine) || "Claude (ola_car_analytics MCP)";
   const execTime = (data.data_source_info && data.data_source_info.execution_time_ms) || "25";
-  const rawTextForCopy = data.message || "";
+  const rawTextForCopy = displayMessage;
   
   widgetsHtml += `
     <div style="margin-top: 14px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="color: var(--accent-lime); font-weight: 600;">✨ ${escapeHtml(aiEngine)}</span>
+        <span style="color: var(--accent-lime); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" style="width: 13px; height: 13px; fill: currentColor;"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>
+          ${escapeHtml(aiEngine)}
+        </span>
         <span>•</span>
         <span>${execTime}ms • ${timeStr}</span>
       </div>
       <button type="button" class="chat-copy-btn" onclick="copyResponse(this, \`${escapeHtml(rawTextForCopy).replace(/`/g, '\\`')}\`)" title="Copy reply">
-        <span>📋</span>
+        <svg viewBox="0 0 24 24" style="width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span>Copy</span>
       </button>
     </div>
   `;
 
   bubble.innerHTML = `
-    <div class="user-avatar" style="width: 36px; height: 36px; font-size: 17px; background: rgba(204, 255, 0, 0.15); border: 1px solid var(--accent-lime);">🤖</div>
+    <div class="chat-avatar-badge chat-avatar-ai" title="Claude AI">
+      <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
+      </svg>
+    </div>
     <div class="web-bubble-card">
       <div id="${textId}" style="font-size: 13.5px; line-height: 1.6; color: var(--text-primary); margin-bottom: 8px;"></div>
       <div id="${widgetsId}" class="enter-fade-up" style="display: none;">
@@ -845,15 +1124,16 @@ function appendAiResponse(data) {
   const widgetsElement = document.getElementById(widgetsId);
 
   // Stream text smoothly with typewriter animation
-  streamTextToElement(textElement, data.message || "", () => {
-    // When text finishes streaming, display widgets and render chart
+  streamTextToElement(textElement, displayMessage, () => {
+    // When text finishes streaming, display widgets and render charts
     if (widgetsElement) {
       widgetsElement.style.display = "block";
     }
 
-    if (hasChart && chartId) {
-      renderChatChart(chartId, chartType, data.chart_data, data.title);
+    for (const c of allCharts) {
+      renderChatChart(c.id, c.type, c.data, c.title);
     }
+
     scrollToBottom();
     setTimeout(scrollToBottom, 120);
   });
