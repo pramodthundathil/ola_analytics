@@ -43,7 +43,7 @@ class SensitiveDataMasker:
 
     @classmethod
     def mask_data(cls, data: Union[Dict[str, Any], List[Any], Any]) -> Any:
-        """Recursively masks sensitive values in dictionaries and lists."""
+        """Recursively masks sensitive values in dictionaries and lists, while safely stringifying ObjectIds and datetimes."""
         if isinstance(data, dict):
             masked_dict = {}
             for k, v in data.items():
@@ -54,7 +54,48 @@ class SensitiveDataMasker:
             return masked_dict
         elif isinstance(data, list):
             return [cls.mask_data(item) for item in data]
+        elif type(data).__name__ == "ObjectId":
+            return str(data)
+        elif hasattr(data, "isoformat"):
+            return data.isoformat()
         return data
+
+    @classmethod
+    def mask_document(cls, doc: Any) -> Any:
+        """Masks sensitive fields in a single document/record."""
+        return cls.mask_data(doc)
+
+    @classmethod
+    def mask_row(cls, row: Any) -> Any:
+        """Masks sensitive fields in a single database row."""
+        return cls.mask_data(row)
+
+    @classmethod
+    def mask_record(cls, record: Any) -> Any:
+        """Masks sensitive fields in a single record."""
+        return cls.mask_data(record)
+
+    @classmethod
+    def mask_records(cls, records: Any) -> Any:
+        """Masks sensitive fields in a list of records."""
+        return cls.mask_data(records)
+
+    @classmethod
+    def mask_dict(cls, d: Any) -> Any:
+        """Masks sensitive fields in a dictionary."""
+        return cls.mask_data(d)
+
+    @classmethod
+    def mask_field(cls, key: str, value: Any) -> Any:
+        """Masks a field value if its key is sensitive."""
+        if cls.is_sensitive_key(str(key)):
+            return cls.MASK_VALUE
+        return cls.mask_data(value)
+
+    @classmethod
+    def mask_value(cls, value: Any) -> Any:
+        """Replaces a value with the masked indicator."""
+        return cls.MASK_VALUE
 
     @classmethod
     def mask_connection_uri(cls, uri: str) -> str:
@@ -62,3 +103,21 @@ class SensitiveDataMasker:
         if not uri or not isinstance(uri, str):
             return uri
         return re.sub(r":([^/@]+)@", r":********@", uri)
+
+
+# Global helper functions for direct module-level imports
+def mask_data(data: Any) -> Any:
+    return SensitiveDataMasker.mask_data(data)
+
+def mask_document(doc: Any) -> Any:
+    return SensitiveDataMasker.mask_document(doc)
+
+def mask_row(row: Any) -> Any:
+    return SensitiveDataMasker.mask_row(row)
+
+def mask_dict(d: Any) -> Any:
+    return SensitiveDataMasker.mask_dict(d)
+
+def mask_records(records: Any) -> Any:
+    return SensitiveDataMasker.mask_records(records)
+

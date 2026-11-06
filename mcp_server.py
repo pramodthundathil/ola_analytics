@@ -24,7 +24,10 @@ from mcp_integration.tools import (
     mcp_get_standard_metrics,
     mcp_count_documents,
     mcp_execute_aggregation,
-    mcp_get_all_collection_stats
+    mcp_get_all_collection_stats,
+    mcp_get_date_breakdown_analytics,
+    mcp_get_invoices_breakdown,
+    mcp_query_collection_records
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -150,12 +153,59 @@ def handle_request(request: dict) -> dict:
                     },
                     {
                         "name": "get_standard_metrics",
-                        "description": "Retrieve standard predefined business metrics (revenue, bookings, fleet utilization, overdue payments).",
+                        "description": "Retrieve standard predefined business metrics (revenue, bookings, fleet utilization, overdue payments) with optional time_range filtering and monthly trends.",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
-                                "metric_type": {"type": "string", "description": "revenue, bookings, fleet_utilization, outstanding_payments, or all"}
+                                "metric_type": {"type": "string", "description": "revenue, bookings, fleet_utilization, outstanding_payments, or all"},
+                                "time_range": {"type": "string", "enum": ["7d", "30d", "90d", "6m", "ytd", "all"], "description": "Time horizon (default: all)"},
+                                "start_date": {"type": "string", "description": "Optional start date in YYYY-MM-DD format"},
+                                "end_date": {"type": "string", "description": "Optional end date in YYYY-MM-DD format"}
                             }
+                        }
+                    },
+                    {
+                        "name": "get_date_breakdown_analytics",
+                        "description": "Retrieve time-series date-breakdown analytics (monthly/weekly/daily) across invoices, payments, bills, or expenses with exact revenue, collections, and volume totals.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "collection_name": {"type": "string", "description": "invoices, paymentreceiveds, bills, or expenses (default: invoices)"},
+                                "time_range": {"type": "string", "enum": ["7d", "30d", "90d", "6m", "ytd", "all"], "description": "Time range filter (default: all)"},
+                                "group_by": {"type": "string", "enum": ["month", "week", "day"], "description": "Grouping interval (default: month)"},
+                                "start_date": {"type": "string", "description": "Optional custom start date in YYYY-MM-DD format"},
+                                "end_date": {"type": "string", "description": "Optional custom end date in YYYY-MM-DD format"}
+                            }
+                        }
+                    },
+                    {
+                        "name": "get_invoices_breakdown",
+                        "description": "Comprehensive multi-aspect invoice analytics: group by date (month), payment status (PAID/PENDING/OVERDUE), or customer with total billed, paid, balance due, and collection efficiency.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "group_by": {"type": "string", "enum": ["month", "status", "customer"], "description": "Grouping dimension (default: month)"},
+                                "time_range": {"type": "string", "enum": ["7d", "30d", "90d", "6m", "ytd", "all"], "description": "Time range filter (default: all)"},
+                                "status": {"type": "string", "description": "Optional status filter (e.g. PAID, PENDING, OVERDUE, PARTIAL)"},
+                                "start_date": {"type": "string", "description": "Optional custom start date in YYYY-MM-DD format"},
+                                "end_date": {"type": "string", "description": "Optional custom end date in YYYY-MM-DD format"},
+                                "limit": {"type": "integer", "description": "Maximum number of rows/customers (default: 50)"}
+                            }
+                        }
+                    },
+                    {
+                        "name": "query_collection_records",
+                        "description": "Safely query individual records from any collection (e.g. 'invoices', 'customers', 'vehicles', 'drivers', 'paymentreceiveds') with automatic sensitive data masking, reference enrichment, and sorting.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "collection_name": {"type": "string", "description": "Name of MongoDB collection (required)"},
+                                "filter_dict": {"type": "object", "description": "Optional query filter dictionary"},
+                                "sort_field": {"type": "string", "description": "Optional field name to sort by (e.g. createdAt, dueDate, paymentDate)"},
+                                "sort_order": {"type": "integer", "enum": [-1, 1], "description": "Sort direction: -1 (descending) or 1 (ascending)"},
+                                "limit": {"type": "integer", "description": "Max records to return (default: 25, capped at 50)"}
+                            },
+                            "required": ["collection_name"]
                         }
                     },
                     {
@@ -190,7 +240,37 @@ def handle_request(request: dict) -> dict:
             elif tool_name == "analyze_collections":
                 res = mcp_get_all_collection_stats()
             elif tool_name == "get_standard_metrics":
-                res = mcp_get_standard_metrics(metric_type=args.get("metric_type", "all"))
+                res = mcp_get_standard_metrics(
+                    metric_type=args.get("metric_type", "all"),
+                    time_range=args.get("time_range", "all"),
+                    start_date=args.get("start_date"),
+                    end_date=args.get("end_date")
+                )
+            elif tool_name == "get_date_breakdown_analytics":
+                res = mcp_get_date_breakdown_analytics(
+                    collection_name=args.get("collection_name", "invoices"),
+                    time_range=args.get("time_range", "all"),
+                    group_by=args.get("group_by", "month"),
+                    start_date=args.get("start_date"),
+                    end_date=args.get("end_date")
+                )
+            elif tool_name == "get_invoices_breakdown":
+                res = mcp_get_invoices_breakdown(
+                    time_range=args.get("time_range", "all"),
+                    group_by=args.get("group_by", "month"),
+                    status=args.get("status"),
+                    start_date=args.get("start_date"),
+                    end_date=args.get("end_date"),
+                    limit=args.get("limit", 50)
+                )
+            elif tool_name == "query_collection_records":
+                res = mcp_query_collection_records(
+                    collection_name=args.get("collection_name", "invoices"),
+                    filter_dict=args.get("filter_dict"),
+                    sort_field=args.get("sort_field"),
+                    sort_order=args.get("sort_order", -1),
+                    limit=args.get("limit", 25)
+                )
             elif tool_name == "validate_sql":
                 res = mcp_validate_sql(query=args.get("query", ""))
             else:

@@ -47,10 +47,21 @@ CLAUDE_TOOLS = [
     },
     {
         "name": "get_invoices_and_receivables",
-        "description": "Fetch customer invoice and accounts receivable analytics: total amount invoiced, collected revenue, outstanding overdue balances, and invoice settlement rates.",
+        "description": "Fetch customer invoice and accounts receivable analytics: total amount invoiced, collected revenue, outstanding overdue balances, invoice settlement rates, and date/status breakdowns.",
         "input_schema": {
             "type": "object",
-            "properties": {}
+            "properties": {
+                "time_range": {
+                    "type": "string",
+                    "enum": ["7d", "30d", "90d", "6m", "ytd", "all"],
+                    "description": "Time horizon to filter invoices. Defaults to 'all'."
+                },
+                "group_by": {
+                    "type": "string",
+                    "enum": ["month", "status", "customer"],
+                    "description": "Breakdown dimension: 'month' for date breakdown, 'status' for payment status breakdown, 'customer' for top accounts. Defaults to 'month'."
+                }
+            }
         }
     },
     {
@@ -238,38 +249,83 @@ class ClaudeChatService:
             return result_summary, visual_payload
 
         elif tool_name == "get_invoices_and_receivables":
-            data = RealERPAnalytics.get_all_real_analytics()
-            tot_invoiced = data.get("total_amount_invoiced", 0.0)
-            tot_paid = data.get("total_amount_paid", 0.0)
-            tot_due = data.get("total_balance_due", 0.0)
+            from mcp_integration.tools import mcp_get_invoices_breakdown
+            time_range = tool_args.get("time_range", "all")
+            group_by = tool_args.get("group_by", "month")
+            status_filter = tool_args.get("status")
+
+            breakdown_res = mcp_get_invoices_breakdown(time_range=time_range, group_by=group_by, status=status_filter)
+            summary = breakdown_res.get("summary", {})
+            tot_invoiced = summary.get("total_invoiced") or summary.get("total_amount", 0.0)
+            tot_paid = summary.get("total_paid", 0.0)
+            tot_due = summary.get("total_balance_due", 0.0)
+            coll_rate_raw = summary.get("collection_rate", "0.0%")
+            coll_rate = str(coll_rate_raw).rstrip("%")
+
+            rows = breakdown_res.get("breakdown", [])
+
+            if group_by == "month" and rows:
+                chart_labels = [r.get("period", "") for r in rows]
+                chart_values = [r.get("total_amount", 0.0) for r in rows]
+                table_rows = [
+                    {
+                        "Period": r.get("period", ""),
+                        "Invoices": r.get("count", 0),
+                        "Billed (USD)": f"${r.get('total_amount', 0.0):,.2f}",
+                        "Collected (USD)": f"${r.get('paid_amount', 0.0):,.2f}",
+                        "Balance Due": f"${r.get('balance_due', 0.0):,.2f}"
+                    }
+                    for r in rows
+                ]
+                chart_type = "bar"
+            elif group_by == "status" and rows:
+                chart_labels = [r.get("status", "") for r in rows]
+                chart_values = [r.get("total_due", 0.0) for r in rows]
+                table_rows = [
+                    {
+                        "Status": r.get("status", ""),
+                        "Count": r.get("count", 0),
+                        "Total (USD)": f"${r.get('total_due', 0.0):,.2f}",
+                        "Paid (USD)": f"${r.get('total_paid', 0.0):,.2f}",
+                        "Balance (USD)": f"${r.get('balance', 0.0):,.2f}",
+                        "Share": f"{r.get('percentage', 0)}%"
+                    }
+                    for r in rows
+                ]
+                chart_type = "doughnut"
+            else:
+                chart_labels = ["Collected Paid", "Pending Overdue"]
+                chart_values = [round(tot_paid, 2), round(tot_due, 2)]
+                table_rows = [
+                    {"Category": "Total Invoiced", "Amount (USD)": f"${tot_invoiced:,.2f}", "Rate": "100%"},
+                    {"Category": "Collected Payments", "Amount (USD)": f"${tot_paid:,.2f}", "Rate": f"{coll_rate}%"},
+                    {"Category": "Overdue Balance Due", "Amount (USD)": f"${tot_due:,.2f}", "Rate": f"{round(100 - float(coll_rate or 0), 1)}%"}
+                ]
+                chart_type = "doughnut"
 
             visual_payload = {
                 "response_type": "chart_and_table",
-                "chart_type": "doughnut",
-                "title": "Customer Invoicing & Overdue Collections",
+                "chart_type": chart_type,
+                "title": f"Invoices & Receivables ({time_range.upper()} - Grouped by {group_by.title()})",
                 "summary_kpi": {
                     "label": "Outstanding Receivables",
                     "value": f"${tot_due:,.2f} USD",
-                    "trend": f"{data.get('invoice_collection_rate', 0)}% collected"
+                    "trend": f"{coll_rate}% collected ({summary.get('total_invoices', summary.get('total_records', 0))} invoices)"
                 },
                 "chart_data": {
-                    "labels": ["Collected Paid", "Pending Overdue"],
-                    "values": [round(tot_paid, 2), round(tot_due, 2)]
+                    "labels": chart_labels,
+                    "values": chart_values
                 },
-                "table_columns": ["Category", "Amount (USD)", "Rate"],
-                "table_data": [
-                    {"Category": "Total Invoiced", "Amount (USD)": f"${tot_invoiced:,.2f}", "Rate": "100%"},
-                    {"Category": "Collected Payments", "Amount (USD)": f"${tot_paid:,.2f}", "Rate": f"{data.get('invoice_collection_rate', 0)}%"},
-                    {"Category": "Overdue Balance Due", "Amount (USD)": f"${tot_due:,.2f}", "Rate": f"{round(100 - data.get('invoice_collection_rate', 0), 1)}%"}
-                ]
+                "table_columns": list(table_rows[0].keys()) if table_rows else ["Category", "Amount"],
+                "table_data": table_rows
             }
 
             result_summary = {
-                "total_invoices_count": data.get("total_invoices", 0),
-                "total_amount_invoiced": tot_invoiced,
-                "total_amount_paid": tot_paid,
-                "total_balance_due": tot_due,
-                "collection_rate_pct": data.get("invoice_collection_rate", 0)
+                "time_range": time_range,
+                "group_by": group_by,
+                "summary": summary,
+                "breakdown": rows[:20],
+                "status_breakdown": breakdown_res.get("status_breakdown", [])
             }
             return result_summary, visual_payload
 
@@ -414,7 +470,7 @@ class ClaudeChatService:
             filter_dict = {}
             if filt_str:
                 try:
-                    filter_dict = json.loads(filt_str)
+                    filter_dict = json.loads(filt_str) if isinstance(filt_str, str) else filt_str
                 except Exception:
                     pass
 
@@ -422,16 +478,16 @@ class ClaudeChatService:
             if db is None:
                 return {"error": "MongoDB offline"}, None
 
-            docs = list(db[coll].find(filter_dict).limit(limit))
-            clean_docs = []
-            for d in docs:
-                if "_id" in d:
-                    d["_id"] = str(d["_id"])
-                clean_docs.append(SensitiveDataMasker.mask_document(d))
+            coll_name = MongoDBClient.resolve_collection_name(coll)
+            cursor = db[coll_name].find(filter_dict).sort("_id", -1).limit(limit)
+            raw_docs = list(cursor)
+            serialized = MongoDBClient.serialize_mongo_doc(raw_docs)
+            enriched = MongoDBClient.populate_references(db, coll_name, serialized)
+            clean_docs = SensitiveDataMasker.mask_records(enriched)
 
             visual_payload = {
                 "response_type": "table",
-                "title": f"Live Data Query: {coll}",
+                "title": f"Live Data Query: {coll_name}",
                 "summary_kpi": {
                     "label": "Records Found",
                     "value": str(len(clean_docs)),
@@ -441,7 +497,7 @@ class ClaudeChatService:
                 "table_data": clean_docs
             }
 
-            return {"collection": coll, "count": len(clean_docs), "documents": clean_docs}, visual_payload
+            return {"collection": coll_name, "count": len(clean_docs), "documents": clean_docs}, visual_payload
 
         return {"error": f"Unknown tool: {tool_name}"}, None
 

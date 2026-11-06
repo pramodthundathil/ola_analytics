@@ -35,3 +35,20 @@ class SensitiveDataMaskerTests(TestCase):
         masked_uri = SensitiveDataMasker.mask_connection_uri(uri)
         self.assertEqual(masked_uri, "mongodb+srv://pramod:********@cluster0.h9lmv8j.mongodb.net/olaCarsFresh?appName=Cluster0")
 
+    def test_mask_aliases_and_methods(self):
+        doc = {"password": "secret", "name": "Test Driver", "token": "xyz"}
+        masked_doc = SensitiveDataMasker.mask_document(doc)
+        self.assertEqual(masked_doc["password"], "********")
+        self.assertEqual(masked_doc["token"], "********")
+        self.assertEqual(masked_doc["name"], "Test Driver")
+
+        records = [doc, {"api_key": "abc", "amount": 100}]
+        masked_records = SensitiveDataMasker.mask_records(records)
+        self.assertEqual(masked_records[0]["password"], "********")
+        self.assertEqual(masked_records[1]["api_key"], "********")
+        self.assertEqual(masked_records[1]["amount"], 100)
+
+        self.assertEqual(SensitiveDataMasker.mask_field("secret", "val"), "********")
+        self.assertEqual(SensitiveDataMasker.mask_field("normal", "val"), "val")
+
+
