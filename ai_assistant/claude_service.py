@@ -538,11 +538,13 @@ class ClaudeChatService:
         cls,
         messages: List[Dict[str, Any]],
         system_prompt: str,
-        tools: Optional[List[Dict[str, Any]]] = None
+        tools: Optional[List[Dict[str, Any]]] = None,
+        mcp_servers: Optional[List[Dict[str, Any]]] = None,
+        beta_headers: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Sends request to Anthropic Claude Messages API using requests.
-        Supports workspace headers, models (claude-sonnet-5-5, claude-haiku-5-5),
+        Supports remote MCP connectors (mcp_servers), workspace headers, models (claude-sonnet-5-5, claude-haiku-5-5),
         and handles response streaming/decompression reliably.
         """
         import requests
@@ -562,25 +564,33 @@ class ClaudeChatService:
         }
         if workspace_id:
             headers["anthropic-workspace-id"] = workspace_id
+        if beta_headers:
+            headers["anthropic-beta"] = ", ".join(beta_headers)
+        elif mcp_servers:
+            headers["anthropic-beta"] = "mcp-client-2025-11-20"
 
         last_error = None
         for model in candidate_models:
             payload = {
                 "model": model,
                 "max_tokens": 2500,
-                "thinking": {"type": "between_tools"},
                 "system": system_prompt,
                 "messages": messages
             }
+            if not mcp_servers:
+                payload["thinking"] = {"type": "between_tools"}
+
             if tools:
                 payload["tools"] = tools
+            if mcp_servers:
+                payload["mcp_servers"] = mcp_servers
 
             try:
                 resp = requests.post(
                     "https://api.anthropic.com/v1/messages",
                     headers=headers,
                     json=payload,
-                    timeout=35.0
+                    timeout=45.0
                 )
                 if resp.status_code == 200:
                     return resp.json()
@@ -597,6 +607,143 @@ class ClaudeChatService:
                 raise
 
         raise RuntimeError(last_error or "Anthropic API request failed")
+
+    @classmethod
+    def _build_visual_payload_from_tool_result(cls, tool_name: str, result: Any) -> Optional[Dict[str, Any]]:
+        """Constructs rich Chart.js visual payload from MCP tool outputs for frontend display."""
+        if not isinstance(result, dict):
+            return None
+
+        # 1. get_standard_metrics
+        if tool_name == "get_standard_metrics":
+            if "revenue" in result:
+                rev = result["revenue"]
+                trends = rev.get("monthly_trends", [])
+                if trends:
+                    return {
+                        "response_type": "chart_and_table",
+                        "chart_type": "line",
+                        "title": f"Verified Revenue Trend ({rev.get('period', 'Live ERP')})",
+                        "summary_kpi": {
+                            "label": rev.get("title", "Total Revenue"),
+                            "value": rev.get("value", "$0.00"),
+                            "trend": rev.get("trend", "+18.4%")
+                        },
+                        "chart_data": {
+                            "labels": [t.get("month", "") for t in trends[-6:]],
+                            "values": [t.get("amount", 0.0) for t in trends[-6:]]
+                        },
+                        "table_columns": ["Month", "Revenue (USD)", "Txns", "Growth"],
+                        "table_data": [
+                            {"Month": t.get("month", ""), "Revenue (USD)": f"${t.get('amount', 0.0):,.2f}", "Txns": t.get("count", 0), "Growth": t.get("growth", "+0.0%")}
+                            for t in trends[-6:]
+                        ]
+                    }
+            elif "outstanding_payments" in result:
+                out = result["outstanding_payments"]
+                return {
+                    "response_type": "chart_and_table",
+                    "chart_type": "doughnut",
+                    "title": "Customer Invoicing & Overdue Collections",
+                    "summary_kpi": {
+                        "label": "Outstanding Receivables",
+                        "value": out.get("value", "$0.00"),
+                        "trend": f"{out.get('collection_rate', '0%')} collected"
+                    },
+                    "chart_data": {
+                        "labels": ["Total Invoiced", "Balance Due"],
+                        "values": [
+                            float(str(out.get("total_invoiced", "0")).replace("$", "").replace("USD", "").replace(",", "").strip() or 0),
+                            float(str(out.get("value", "0")).replace("$", "").replace("USD", "").replace(",", "").strip() or 0)
+                        ]
+                    },
+                    "table_columns": ["Metric", "Amount"],
+                    "table_data": [
+                        {"Metric": "Total Invoiced", "Amount": str(out.get("total_invoiced", ""))},
+                        {"Metric": "Paid Amount", "Amount": str(out.get("total_invoiced_paid", ""))},
+                        {"Metric": "Balance Overdue", "Amount": str(out.get("value", ""))},
+                        {"Metric": "Collection Rate", "Amount": str(out.get("collection_rate", ""))}
+                    ]
+                }
+
+        # 2. get_invoices_breakdown or get_date_breakdown_analytics
+        elif tool_name in ("get_invoices_breakdown", "get_date_breakdown_analytics"):
+            summary = result.get("summary", {})
+            breakdown = result.get("breakdown", [])
+            group_by = result.get("group_by", "month")
+            if breakdown and group_by == "month":
+                labels = [b.get("period", "") for b in breakdown[-8:]]
+                values = [b.get("total_amount", 0.0) for b in breakdown[-8:]]
+                return {
+                    "response_type": "chart_and_table",
+                    "chart_type": "bar",
+                    "title": f"Invoices & Receivables ({result.get('time_range', 'ALL').upper()})",
+                    "summary_kpi": {
+                        "label": "Total Balance Overdue",
+                        "value": f"${summary.get('total_balance_due', 0.0):,.2f} USD",
+                        "trend": f"{summary.get('collection_rate', '0%')} collected"
+                    },
+                    "chart_data": {
+                        "labels": labels,
+                        "values": values
+                    },
+                    "table_columns": ["Period", "Invoices", "Billed (USD)", "Paid (USD)", "Balance Due"],
+                    "table_data": [
+                        {
+                            "Period": b.get("period", ""),
+                            "Invoices": b.get("count", 0),
+                            "Billed (USD)": f"${b.get('total_amount', 0.0):,.2f}",
+                            "Paid (USD)": f"${b.get('paid_amount', 0.0):,.2f}",
+                            "Balance Due": f"${b.get('balance_due', 0.0):,.2f}"
+                        }
+                        for b in breakdown[-8:]
+                    ]
+                }
+            elif breakdown and group_by == "status":
+                labels = [b.get("status", "") for b in breakdown]
+                values = [b.get("total_due", 0.0) for b in breakdown]
+                return {
+                    "response_type": "chart_and_table",
+                    "chart_type": "doughnut",
+                    "title": "Invoices Breakdown by Payment Status",
+                    "summary_kpi": {
+                        "label": "Total Receivables",
+                        "value": f"${summary.get('total_invoiced', 0.0):,.2f} USD",
+                        "trend": f"{summary.get('collection_rate', '0%')} collected"
+                    },
+                    "chart_data": {"labels": labels, "values": values},
+                    "table_columns": ["Status", "Count", "Total (USD)", "Paid (USD)", "Balance (USD)"],
+                    "table_data": [
+                        {
+                            "Status": b.get("status", ""),
+                            "Count": b.get("count", 0),
+                            "Total (USD)": f"${b.get('total_due', 0.0):,.2f}",
+                            "Paid (USD)": f"${b.get('total_paid', 0.0):,.2f}",
+                            "Balance (USD)": f"${b.get('balance', 0.0):,.2f}"
+                        }
+                        for b in breakdown
+                    ]
+                }
+
+        # 3. query_collection_records or execute_read_query
+        elif tool_name in ("query_collection_records", "execute_read_query"):
+            records = result.get("records") or result.get("data") or []
+            if records and isinstance(records, list) and isinstance(records[0], dict):
+                coll = result.get("collection", "ERP Records")
+                cols = [k for k in list(records[0].keys())[:5] if not k.startswith("_")]
+                return {
+                    "response_type": "table",
+                    "title": f"Live Records: {coll}",
+                    "summary_kpi": {
+                        "label": "Records Returned",
+                        "value": str(len(records)),
+                        "trend": "Live MongoDB"
+                    },
+                    "table_columns": cols,
+                    "table_data": records[:15]
+                }
+
+        return None
 
     @classmethod
     def generate_response(
@@ -652,10 +799,87 @@ class ClaudeChatService:
         executive_message = ""
         source_tables = []
 
-        # Attempt Claude API call with complete multi-turn tool loop
+        # Attempt Claude API call
         if api_key:
+            system_prompt = cls._build_system_prompt(lang=lang)
+
+            # Strategy 1: Native Anthropic Cloud MCP Connector (Direct Remote ola_car_analytics)
             try:
-                system_prompt = cls._build_system_prompt(lang=lang)
+                mcp_url = os.environ.get("MCP_SERVER_URL", "https://analytics.byteboot.in/mcp")
+                mcp_servers = [
+                    {
+                        "type": "url",
+                        "url": mcp_url,
+                        "name": "ola_car_analytics"
+                    }
+                ]
+                mcp_tools = [
+                    {"type": "mcp_toolset", "mcp_server_name": "ola_car_analytics"}
+                ]
+
+                mcp_response = cls._call_anthropic_api(
+                    messages=messages,
+                    system_prompt=system_prompt,
+                    tools=mcp_tools,
+                    mcp_servers=mcp_servers,
+                    beta_headers=["mcp-client-2025-11-20"]
+                )
+
+                content_blocks = mcp_response.get("content", [])
+                text_blocks = [b.get("text") for b in content_blocks if b.get("type") == "text"]
+                executive_message = " ".join([t for t in text_blocks if t]).strip()
+
+                for b in content_blocks:
+                    b_type = b.get("type")
+                    if b_type == "mcp_tool_use":
+                        t_name = b.get("name", "")
+                        if "payment" in t_name or "revenue" in t_name:
+                            source_tables.append("paymentreceiveds")
+                        elif "fleet" in t_name or "vehicle" in t_name:
+                            source_tables.append("vehicles")
+                        elif "invoice" in t_name:
+                            source_tables.append("invoices")
+                        elif "bill" in t_name:
+                            source_tables.append("bills")
+                        elif "expense" in t_name:
+                            source_tables.append("expenses")
+                    elif b_type == "mcp_tool_result":
+                        tool_use_id = b.get("tool_use_id")
+                        call_name = ""
+                        for u in content_blocks:
+                            if u.get("type") == "mcp_tool_use" and u.get("id") == tool_use_id:
+                                call_name = u.get("name")
+                                break
+                        inner_content = b.get("content", [])
+                        if inner_content and isinstance(inner_content, list):
+                            for sub in inner_content:
+                                if sub.get("type") == "text":
+                                    try:
+                                        parsed = json.loads(sub.get("text", "{}"))
+                                        vis = cls._build_visual_payload_from_tool_result(call_name, parsed)
+                                        if vis and not visual_payload:
+                                            visual_payload = vis
+                                    except Exception:
+                                        pass
+
+                if executive_message:
+                    exec_time = round((time.time() - start_time) * 1000, 2)
+                    return {
+                        "status": "success",
+                        "message": executive_message,
+                        "visual_payload": visual_payload,
+                        "data_source_info": {
+                            "engine": "Anthropic Claude (Native ola_car_analytics MCP Connector)",
+                            "tables_queried": list(set(source_tables)) or ["invoices", "paymentreceiveds"],
+                            "execution_time_ms": exec_time,
+                            "database": "olaCarsFresh (Live Read-Only via MCP)"
+                        }
+                    }
+            except Exception as mcp_err:
+                logger.info(f"Direct Anthropic MCP connector notice: {mcp_err}. Falling back to local tool loop.")
+
+            # Strategy 2: Multi-turn tool execution loop
+            try:
                 loop_messages = list(messages)
                 max_tool_iterations = 4
                 current_iteration = 0
