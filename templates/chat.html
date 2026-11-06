@@ -5,6 +5,114 @@
 {% block breadcrumb %}{{ t.nav_chat }}{% endblock %}
 
 {% block content %}
+<style>
+/* Animated Querying State & Text Streaming */
+@keyframes queryShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes queryPulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 4px var(--accent-lime)); }
+  50% { opacity: 1; transform: scale(1.08); filter: drop-shadow(0 0 10px var(--accent-lime)); }
+}
+
+@keyframes textCursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes enterFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.querying-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(204, 255, 0, 0.4) !important;
+  background: linear-gradient(135deg, rgba(20, 26, 36, 0.95), rgba(15, 20, 28, 0.98)) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 18px rgba(204, 255, 0, 0.12) !important;
+  padding: 16px 20px !important;
+  border-radius: 4px 18px 18px 18px !important;
+}
+
+.querying-step-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-height: 28px;
+}
+
+.querying-step-icon {
+  font-size: 18px;
+  animation: queryPulseGlow 1.8s infinite ease-in-out;
+}
+
+.querying-step-text {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  color: var(--text-primary);
+  letter-spacing: -0.1px;
+}
+
+.querying-progress-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-lime), #00e5ff, transparent);
+  background-size: 200% 100%;
+  animation: queryShimmer 2s infinite linear;
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-lime);
+  margin-right: 3px;
+  animation: queryPulseGlow 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.typing-cursor {
+  display: inline-block;
+  color: var(--accent-lime);
+  font-weight: 900;
+  margin-left: 2px;
+  animation: textCursorBlink 0.7s infinite;
+}
+
+.enter-fade-up {
+  animation: enterFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.click-to-skip-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-top: 8px;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  user-select: none;
+}
+.click-to-skip-hint:hover {
+  opacity: 1;
+  color: var(--accent-lime);
+}
+</style>
 <div class="chat-full-canvas">
   
   <!-- Sleek Executive Chat Header Toolbar -->
@@ -294,26 +402,225 @@ function appendUserMessage(text) {
   scrollToBottom();
 }
 
+let typingInterval = null;
+const typingSteps = [
+  { icon: "🔍", text: "Connecting to live ERP database (olaCarsFresh)..." },
+  { icon: "⚡", text: "Invoking ola_car_analytics MCP connector..." },
+  { icon: "📊", text: "Querying invoice ledgers & payment collections..." },
+  { icon: "🛡️", text: "Verifying live records & masking sensitive data..." },
+  { icon: "✨", text: "Claude synthesizing executive briefing & charts..." }
+];
+
 function appendTypingIndicator() {
+  removeTypingIndicator();
   const container = document.getElementById("chat-messages");
   const typing = document.createElement("div");
   typing.id = "typing-bubble";
-  typing.className = "web-chat-bubble web-bubble-ai";
+  typing.className = "web-chat-bubble web-bubble-ai enter-fade-up";
+
+  let stepIdx = 0;
+  const initial = typingSteps[0];
+
   typing.innerHTML = `
     <div class="user-avatar" style="width: 36px; height: 36px; font-size: 17px; background: rgba(204, 255, 0, 0.15); border: 1px solid var(--accent-lime);">🤖</div>
-    <div class="web-bubble-card" style="color: var(--accent-lime); font-size: 13px; display: flex; align-items: center; gap: 10px;">
-      <span class="pulse-dot"></span>
-      <span>Consulting Claude & Arrendadora Ola Cars ERP...</span>
+    <div class="web-bubble-card querying-card">
+      <div class="querying-step-container">
+        <span id="querying-icon" class="querying-step-icon">${initial.icon}</span>
+        <span id="querying-text" class="querying-step-text">${initial.text}</span>
+        <span style="margin-left: auto; display: flex; align-items: center;">
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+        </span>
+      </div>
+      <div class="querying-progress-line"></div>
     </div>
   `;
   container.appendChild(typing);
   scrollToBottom();
+
+  typingInterval = setInterval(() => {
+    stepIdx = (stepIdx + 1) % typingSteps.length;
+    const nextStep = typingSteps[stepIdx];
+    const iconEl = document.getElementById("querying-icon");
+    const textEl = document.getElementById("querying-text");
+    if (textEl && iconEl) {
+      textEl.style.opacity = "0";
+      textEl.style.transform = "translateY(-4px)";
+      setTimeout(() => {
+        iconEl.textContent = nextStep.icon;
+        textEl.textContent = nextStep.text;
+        textEl.style.opacity = "1";
+        textEl.style.transform = "translateY(0)";
+      }, 160);
+    }
+  }, 1600);
+
   return typing;
 }
 
 function removeTypingIndicator() {
+  if (typingInterval) {
+    clearInterval(typingInterval);
+    typingInterval = null;
+  }
   const typing = document.getElementById("typing-bubble");
   if (typing) typing.remove();
+}
+
+function streamTextToElement(element, fullText, onComplete) {
+  if (!fullText) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  // Tokenize by words/spaces
+  const tokens = fullText.split(/(\s+)/);
+  let currentIndex = 0;
+  let currentBuffer = "";
+  let isSkipped = false;
+
+  const hintEl = document.createElement("div");
+  hintEl.className = "click-to-skip-hint";
+  hintEl.textContent = "⚡ Generating response • Click message to display instantly";
+  element.parentNode.appendChild(hintEl);
+
+  const skipHandler = () => {
+    if (isSkipped) return;
+    isSkipped = true;
+    element.innerHTML = formatExecutiveText(fullText);
+    if (hintEl && hintEl.parentNode) hintEl.remove();
+    scrollToBottom();
+    if (onComplete) onComplete();
+  };
+
+  element.parentNode.addEventListener("click", skipHandler, { once: true });
+
+  const streamInterval = setInterval(() => {
+    if (isSkipped) {
+      clearInterval(streamInterval);
+      return;
+    }
+
+    // Advance by 3 tokens per tick (~20ms) for high-speed fluid reading
+    const chunkTokens = tokens.slice(currentIndex, currentIndex + 3);
+    currentIndex += 3;
+    currentBuffer += chunkTokens.join("");
+
+    element.innerHTML = formatExecutiveText(currentBuffer) + '<span class="typing-cursor">▌</span>';
+    scrollToBottom();
+
+    if (currentIndex >= tokens.length) {
+      clearInterval(streamInterval);
+      element.innerHTML = formatExecutiveText(fullText);
+      if (hintEl && hintEl.parentNode) hintEl.remove();
+      scrollToBottom();
+      if (onComplete) onComplete();
+    }
+  }, 20);
+}
+
+function renderChatChart(chartId, chartType, chartData, title) {
+  setTimeout(() => {
+    const ctx = document.getElementById(chartId);
+    if (!ctx) return;
+    const labels = chartData.labels || [];
+    const values = chartData.values || [];
+    const palette = ["#ccff00", "#00e5ff", "#ff3b30", "#ffd600", "#bf5af2", "#30d158", "#ff9f0a", "#8e8e93"];
+
+    if (chartType === "pie" || chartType === "doughnut") {
+      new Chart(ctx, {
+        type: chartType,
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: palette.slice(0, labels.length),
+            borderColor: "#11161d",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              labels: { color: "#8e9da8", font: { size: 11 }, boxWidth: 12 }
+            }
+          }
+        }
+      });
+    } else if (chartType === "line") {
+      const chartContext = ctx.getContext("2d");
+      const gradient = chartContext.createLinearGradient(0, 0, 0, 220);
+      gradient.addColorStop(0, "rgba(204, 255, 0, 0.35)");
+      gradient.addColorStop(1, "rgba(204, 255, 0, 0.0)");
+
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: title || "Value",
+            data: values,
+            borderColor: "#ccff00",
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.35,
+            borderWidth: 3,
+            pointBackgroundColor: "#ccff00",
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
+            y: {
+              grid: { color: "rgba(255,255,255,0.06)" },
+              ticks: {
+                color: "#8e9da8",
+                font: { size: 11 },
+                callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
+              }
+            }
+          }
+        }
+      });
+    } else {
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: "#ccff00",
+            borderRadius: 6,
+            barThickness: Math.max(16, Math.min(36, Math.floor(420 / (labels.length || 1)))),
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
+            y: {
+              grid: { color: "rgba(255,255,255,0.06)" },
+              ticks: {
+                color: "#8e9da8",
+                font: { size: 11 },
+                callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
+              }
+            }
+          }
+        }
+      });
+    }
+  }, 40);
 }
 
 function escapeHtml(string) {
@@ -438,13 +745,17 @@ function appendAiResponse(data) {
   const container = document.getElementById("chat-messages");
   const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const bubble = document.createElement("div");
-  bubble.className = "web-chat-bubble web-bubble-ai";
+  bubble.className = "web-chat-bubble web-bubble-ai enter-fade-up";
 
-  let bodyHtml = `<div style="font-size: 13.5px; line-height: 1.6; color: var(--text-primary); margin-bottom: 14px;">${formatExecutiveText(data.message || "")}</div>`;
+  const textId = `ai-text-${Date.now()}`;
+  const widgetsId = `ai-widgets-${Date.now()}`;
+
+  // Build widgets HTML (KPI, Chart, Table, Metadata Bar)
+  let widgetsHtml = "";
 
   // Render KPI Summary Card if provided
   if (data.summary_kpi) {
-    bodyHtml += `
+    widgetsHtml += `
       <div style="display: inline-flex; align-items: center; gap: 12px; background: rgba(204, 255, 0, 0.08); border: 1px solid rgba(204, 255, 0, 0.25); border-radius: 10px; padding: 10px 18px; margin-bottom: 14px;">
         <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700;">${escapeHtml(data.summary_kpi.label || "KPI")}:</span>
         <span style="font-size: 17px; font-weight: 800; color: var(--accent-lime);">${escapeHtml(data.summary_kpi.value || "")}</span>
@@ -457,11 +768,13 @@ function appendAiResponse(data) {
   const hasChart = data.chart_data && data.chart_data.labels && data.chart_data.labels.length > 0;
   const tableRows = data.table_data || data.data || [];
   const tableCols = data.table_columns || data.columns || (tableRows.length > 0 ? Object.keys(tableRows[0]) : []);
+  let chartId = null;
+  let chartType = null;
 
   if (hasChart) {
-    const chartId = `web-chart-dyn-${++chartCounter}`;
-    const chartType = (data.chart_type || "bar").toLowerCase();
-    bodyHtml += `
+    chartId = `web-chart-dyn-${++chartCounter}`;
+    chartType = (data.chart_type || "bar").toLowerCase();
+    widgetsHtml += `
       <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
           <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${escapeHtml(data.title || "Live Business Visualization")}</span>
@@ -472,113 +785,11 @@ function appendAiResponse(data) {
         </div>
       </div>
     `;
-
-    setTimeout(() => {
-      const ctx = document.getElementById(chartId);
-      if (ctx) {
-        const labels = data.chart_data.labels;
-        const values = data.chart_data.values;
-        const palette = ["#ccff00", "#00e5ff", "#ff3b30", "#ffd600", "#bf5af2", "#30d158", "#ff9f0a", "#8e8e93"];
-
-        if (chartType === "pie" || chartType === "doughnut") {
-          new Chart(ctx, {
-            type: chartType,
-            data: {
-              labels: labels,
-              datasets: [{
-                data: values,
-                backgroundColor: palette.slice(0, labels.length),
-                borderColor: "#11161d",
-                borderWidth: 2
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  position: "right",
-                  labels: { color: "#8e9da8", font: { size: 11 }, boxWidth: 12 }
-                }
-              }
-            }
-          });
-        } else if (chartType === "line") {
-          const chartContext = ctx.getContext("2d");
-          const gradient = chartContext.createLinearGradient(0, 0, 0, 220);
-          gradient.addColorStop(0, "rgba(204, 255, 0, 0.35)");
-          gradient.addColorStop(1, "rgba(204, 255, 0, 0.0)");
-
-          new Chart(ctx, {
-            type: "line",
-            data: {
-              labels: labels,
-              datasets: [{
-                label: data.title || "Value",
-                data: values,
-                borderColor: "#ccff00",
-                backgroundColor: gradient,
-                fill: true,
-                tension: 0.35,
-                borderWidth: 3,
-                pointBackgroundColor: "#ccff00",
-                pointRadius: 4
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
-              scales: {
-                x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
-                y: {
-                  grid: { color: "rgba(255,255,255,0.06)" },
-                  ticks: {
-                    color: "#8e9da8",
-                    font: { size: 11 },
-                    callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
-                  }
-                }
-              }
-            }
-          });
-        } else {
-          new Chart(ctx, {
-            type: "bar",
-            data: {
-              labels: labels,
-              datasets: [{
-                data: values,
-                backgroundColor: "#ccff00",
-                borderRadius: 6,
-                barThickness: Math.max(16, Math.min(36, Math.floor(420 / (labels.length || 1)))),
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
-              scales: {
-                x: { grid: { display: false }, ticks: { color: "#8e9da8", font: { size: 11 } } },
-                y: {
-                  grid: { color: "rgba(255,255,255,0.06)" },
-                  ticks: {
-                    color: "#8e9da8",
-                    font: { size: 11 },
-                    callback: (v) => (v >= 1000 ? "$" + (v / 1000).toLocaleString() + "K" : "$" + v)
-                  }
-                }
-              }
-            }
-          });
-        }
-      }
-    }, 60);
   }
 
   // Render Table if available
   if (tableRows.length > 0 && tableCols.length > 0) {
-    bodyHtml += `
+    widgetsHtml += `
       <div style="overflow-x: auto; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 10px;">
         <table class="enterprise-table">
           <thead>
@@ -599,11 +810,11 @@ function appendAiResponse(data) {
   }
 
   // Live Query Metadata Bar with Copy Action
-  const aiEngine = (data.data_source_info && data.data_source_info.ai_engine) || "Claude (Anthropic API)";
+  const aiEngine = (data.data_source_info && data.data_source_info.engine) || (data.data_source_info && data.data_source_info.ai_engine) || "Claude (ola_car_analytics MCP)";
   const execTime = (data.data_source_info && data.data_source_info.execution_time_ms) || "25";
   const rawTextForCopy = data.message || "";
   
-  bodyHtml += `
+  widgetsHtml += `
     <div style="margin-top: 14px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
         <span style="color: var(--accent-lime); font-weight: 600;">✨ ${escapeHtml(aiEngine)}</span>
@@ -620,13 +831,32 @@ function appendAiResponse(data) {
   bubble.innerHTML = `
     <div class="user-avatar" style="width: 36px; height: 36px; font-size: 17px; background: rgba(204, 255, 0, 0.15); border: 1px solid var(--accent-lime);">🤖</div>
     <div class="web-bubble-card">
-      ${bodyHtml}
+      <div id="${textId}" style="font-size: 13.5px; line-height: 1.6; color: var(--text-primary); margin-bottom: 8px;"></div>
+      <div id="${widgetsId}" class="enter-fade-up" style="display: none;">
+        ${widgetsHtml}
+      </div>
     </div>
   `;
 
   container.appendChild(bubble);
   scrollToBottom();
-  setTimeout(scrollToBottom, 100);
+
+  const textElement = document.getElementById(textId);
+  const widgetsElement = document.getElementById(widgetsId);
+
+  // Stream text smoothly with typewriter animation
+  streamTextToElement(textElement, data.message || "", () => {
+    // When text finishes streaming, display widgets and render chart
+    if (widgetsElement) {
+      widgetsElement.style.display = "block";
+    }
+
+    if (hasChart && chartId) {
+      renderChatChart(chartId, chartType, data.chart_data, data.title);
+    }
+    scrollToBottom();
+    setTimeout(scrollToBottom, 120);
+  });
 }
 
 async function sendChatQuery(prompt) {

@@ -1145,6 +1145,113 @@ body.chat-body-locked .web-content-body.chat-viewport-body,
   color: var(--accent-lime);
 }
 
+/* Animated Querying State & Text Streaming */
+@keyframes queryShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes queryPulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 4px var(--accent-lime)); }
+  50% { opacity: 1; transform: scale(1.08); filter: drop-shadow(0 0 10px var(--accent-lime)); }
+}
+
+@keyframes textCursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes enterFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.querying-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(204, 255, 0, 0.4) !important;
+  background: linear-gradient(135deg, rgba(20, 26, 36, 0.95), rgba(15, 20, 28, 0.98)) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 18px rgba(204, 255, 0, 0.12) !important;
+  padding: 16px 20px !important;
+  border-radius: 4px 18px 18px 18px !important;
+}
+
+.querying-step-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-height: 28px;
+}
+
+.querying-step-icon {
+  font-size: 18px;
+  animation: queryPulseGlow 1.8s infinite ease-in-out;
+}
+
+.querying-step-text {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  color: var(--text-primary);
+  letter-spacing: -0.1px;
+}
+
+.querying-progress-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-lime), #00e5ff, transparent);
+  background-size: 200% 100%;
+  animation: queryShimmer 2s infinite linear;
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-lime);
+  margin-right: 3px;
+  animation: queryPulseGlow 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.typing-cursor {
+  display: inline-block;
+  color: var(--accent-lime);
+  font-weight: 900;
+  margin-left: 2px;
+  animation: textCursorBlink 0.7s infinite;
+}
+
+.enter-fade-up {
+  animation: enterFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.click-to-skip-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-top: 8px;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  user-select: none;
+}
+.click-to-skip-hint:hover {
+  opacity: 1;
+  color: var(--accent-lime);
+}
+
 /* Permanent Fixed Bottom Dock */
 .chat-bottom-dock {
   flex-shrink: 0 !important;
