@@ -180,7 +180,7 @@ def handle_request(request: dict) -> dict:
                     },
                     {
                         "name": "get_invoices_breakdown",
-                        "description": "Comprehensive multi-aspect invoice analytics: group by date (month), payment status (PAID/PENDING/OVERDUE), or customer with total billed, paid, balance due, and collection efficiency.",
+                        "description": "Comprehensive multi-aspect invoice analytics: group by date (month), payment status (PAID/PENDING/OVERDUE), or customer with total billed, paid, balance due, and collection efficiency. Call this whenever leadership asks for invoice totals, billing performance, or accounts receivable.",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -195,11 +195,11 @@ def handle_request(request: dict) -> dict:
                     },
                     {
                         "name": "query_collection_records",
-                        "description": "Safely query individual records from any collection (e.g. 'invoices', 'customers', 'vehicles', 'drivers', 'paymentreceiveds') with automatic sensitive data masking, reference enrichment, and sorting.",
+                        "description": "Safely query individual records from any collection (e.g. 'invoices', 'customers', 'vehicles', 'drivers', 'paymentreceiveds') with automatic sensitive data masking, reference enrichment, and sorting. Call this to retrieve the latest invoice batch, individual invoice details, driver profiles, or vehicle statuses.",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
-                                "collection_name": {"type": "string", "description": "Name of MongoDB collection (required)"},
+                                "collection_name": {"type": "string", "description": "Name of MongoDB collection (e.g. invoices, vehicles, customers)"},
                                 "filter_dict": {"type": "object", "description": "Optional query filter dictionary"},
                                 "sort_field": {"type": "string", "description": "Optional field name to sort by (e.g. createdAt, dueDate, paymentDate)"},
                                 "sort_order": {"type": "integer", "enum": [-1, 1], "description": "Sort direction: -1 (descending) or 1 (ascending)"},
