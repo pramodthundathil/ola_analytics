@@ -948,11 +948,13 @@ class ClaudeChatService:
         elif any(k in p_lower for k in ["bank", "account", "balance", "cash", "liquidity", "banco", "cuenta", "saldo", "caja", "liquidez"]):
             ba = real_data.get("bank_accounts_overview", {})
             accs = ba.get("accounts", [])
+            top_bal_str = f" con saldo principal de ${accs[0].get('balance', 0):,.2f}" if accs else ""
+            top_bal_en = f" with primary account holding ${accs[0].get('balance', 0):,.2f}" if accs else ""
             return {
                 "status": "success",
                 "response_type": "table",
                 "title": f"Cuentas Bancarias y Saldos de Caja ({ba.get('total_accounts', 0)} Cuentas)" if is_es else f"Bank Accounts & Cash Balances ({ba.get('total_accounts', 0)} Accounts)",
-                "message": f"La empresa mantiene {ba.get('total_accounts', 0)} cuentas bancarias y de tesorería con ${ba.get('total_positive_liquidity', 0):,.2f} USD en reservas líquidas positivas:" if is_es else f"The company operates {ba.get('total_accounts', 0)} bank & treasury accounts holding ${ba.get('total_positive_liquidity', 0):,.2f} USD in positive liquid cash reserves:",
+                "message": f"La empresa mantiene {ba.get('total_accounts', 0)} cuentas bancarias y de tesorería con ${ba.get('total_positive_liquidity', 0):,.2f} USD en reservas líquidas positivas{top_bal_str}:" if is_es else f"The company operates {ba.get('total_accounts', 0)} bank & treasury accounts holding ${ba.get('total_positive_liquidity', 0):,.2f} USD in positive liquid cash reserves{top_bal_en}:",
                 "summary_kpi": {
                     "label": "Positive Liquidity",
                     "value": f"${ba.get('total_positive_liquidity', 0):,.2f} USD",
@@ -975,16 +977,18 @@ class ClaudeChatService:
         elif any(k in p_lower for k in ["expense", "burn", "gasto", "operativo"]):
             exp = real_data.get("expenses_overview", {})
             m_exp = exp.get("monthly_expenses", [])
+            tot_exp_amt = exp.get("total_expenses_amount") or exp.get("total_amount_expensed", 0.0)
+            tot_exp_cnt = exp.get("total_expenses_count") or exp.get("total_expenses", 0)
             return {
                 "status": "success",
                 "response_type": "chart_and_table",
                 "title": "Gastos Operativos Históricos (Expenses)" if is_es else "Historical Operating Expenses (Expenses)",
-                "message": f"Se han registrado {exp.get('total_expenses', 0)} transacciones de gastos operativos acumulando ${exp.get('total_amount_expensed', 0):,.2f} USD en gasto corporativo:" if is_es else f"A total of {exp.get('total_expenses', 0)} operating expense records totaling ${exp.get('total_amount_expensed', 0):,.2f} USD in corporate burn:",
+                "message": f"Se han registrado {tot_exp_cnt} transacciones de gastos operativos acumulando ${tot_exp_amt:,.2f} USD en gasto corporativo:" if is_es else f"A total of {tot_exp_cnt} operating expense records totaling ${tot_exp_amt:,.2f} USD in corporate burn:",
                 "chart_type": "line",
                 "summary_kpi": {
                     "label": "Total Operating Expenses",
-                    "value": f"${exp.get('total_amount_expensed', 0):,.2f} USD",
-                    "trend": f"{exp.get('total_expenses', 0)} entries"
+                    "value": f"${tot_exp_amt:,.2f} USD",
+                    "trend": f"{tot_exp_cnt} entries"
                 },
                 "chart_data": {
                     "labels": [m.get("month", "") for m in m_exp],

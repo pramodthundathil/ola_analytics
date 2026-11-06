@@ -116,32 +116,32 @@ def mcp_get_standard_metrics(metric_type: str = "all") -> Dict[str, Any]:
     metrics = {
         "revenue": {
             "title": "Total Revenue Collected",
-            "value": f"${analytics['total_revenue_collected']:,.2f} USD",
+            "value": f"${analytics.get('total_revenue_collected', 0.0):,.2f} USD",
             "trend": "+18.4%",
-            "transactions_count": analytics["total_payments_count"],
+            "transactions_count": analytics.get("total_payments_count", 0),
             "period": "YTD Live ERP Data"
         },
         "bookings": {
             "title": "Active Vehicle Rentals & Drivers",
-            "value": f"{analytics['active_rentals']} Active Rentals",
-            "total_drivers": analytics["total_drivers"],
-            "total_customers": analytics["total_customers"],
+            "value": f"{analytics.get('active_rentals', 0)} Active Rentals",
+            "total_drivers": analytics.get("total_drivers", 0),
+            "total_customers": analytics.get("total_customers", 0),
             "period": "Current Active Fleet"
         },
         "fleet_utilization": {
             "title": "Fleet Utilization Rate",
-            "value": f"{analytics['utilization_rate']}%",
-            "total_vehicles": analytics["total_vehicles"],
-            "rented_vehicles": analytics["active_rentals"],
-            "available_vehicles": analytics["available_vehicles"],
+            "value": f"{analytics.get('utilization_rate', 0.0)}%",
+            "total_vehicles": analytics.get("total_vehicles", 0),
+            "rented_vehicles": analytics.get("active_rentals", 0),
+            "available_vehicles": analytics.get("available_vehicles", 0),
             "period": "Live Fleet Status"
         },
         "outstanding_payments": {
             "title": "Total Outstanding & Overdue Payments",
-            "value": f"${analytics['total_balance_due']:,.2f} USD",
-            "total_invoiced": f"${analytics['total_amount_invoiced']:,.2f} USD",
-            "total_invoiced_paid": f"${analytics['total_amount_paid']:,.2f} USD",
-            "collection_rate": f"{analytics['invoice_collection_rate']}%",
+            "value": f"${analytics.get('total_balance_due', 0.0):,.2f} USD",
+            "total_invoiced": f"${analytics.get('total_amount_invoiced', 0.0):,.2f} USD",
+            "total_invoiced_paid": f"${analytics.get('total_amount_paid', 0.0):,.2f} USD",
+            "collection_rate": f"{analytics.get('invoice_collection_rate', 0.0)}%",
             "pending_invoices_count": 52,
             "currency": "USD ($)"
         }

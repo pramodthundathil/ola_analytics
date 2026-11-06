@@ -81,14 +81,20 @@ const OlaApp = {
     const splash = document.getElementById("server-startup-splash");
     if (!splash) return;
 
+    // Instant bypass if user has already seen splash in this browser session
+    if (sessionStorage.getItem("ola_splash_seen")) {
+      splash.classList.add("splash-dismissed");
+      splash.style.display = "none";
+      return;
+    }
+
     const progressBar = splash.querySelector(".splash-progress-bar");
     const statusText = splash.querySelector(".splash-status-text");
 
     const steps = [
-      { pct: 25, delay: 300, en: "Initializing Ola Cars AI Engine...", es: "Iniciando motor de IA de Ola Cars..." },
-      { pct: 60, delay: 800, en: "Verifying Read-Only ERP Database Connection...", es: "Verificando conexión segura de sólo lectura con ERP..." },
-      { pct: 90, delay: 1300, en: "Loading Bilingual NLP Models (EN / ES)...", es: "Cargando modelos bilingües de PNL (EN / ES)..." },
-      { pct: 100, delay: 1700, en: "System Online • Read-Only Security Active", es: "Sistema en Línea • Seguridad de Sólo Lectura Activa" }
+      { pct: 35, delay: 50, en: "Initializing Ola Cars AI Engine...", es: "Iniciando motor de IA de Ola Cars..." },
+      { pct: 75, delay: 140, en: "Verifying Read-Only ERP Database Connection...", es: "Verificando conexión segura de sólo lectura con ERP..." },
+      { pct: 100, delay: 240, en: "System Online • Read-Only Security Active", es: "Sistema en Línea • Seguridad de Sólo Lectura Activa" }
     ];
 
     const currentLang = this.lang;
@@ -100,10 +106,18 @@ const OlaApp = {
       }, step.delay);
     });
 
-    // Dismiss splash smoothly after completion
+    // Dismiss splash swiftly and smoothly within 350ms
     setTimeout(() => {
       splash.classList.add("splash-dismissed");
-    }, 2200);
+      sessionStorage.setItem("ola_splash_seen", "true");
+    }, 350);
+
+    // Instant dismiss on click or touch
+    splash.addEventListener("click", () => {
+      splash.classList.add("splash-dismissed");
+      splash.style.display = "none";
+      sessionStorage.setItem("ola_splash_seen", "true");
+    });
   },
 
   /* --------------------------------------------------------------------------

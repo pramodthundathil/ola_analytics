@@ -116,17 +116,20 @@ def home_view(request):
     time_range = request.GET.get("range", "30d")
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
+    force_refresh = request.GET.get("refresh") == "1"
 
     real_data = RealERPAnalytics.get_analytics_with_time_range(
         time_range=time_range,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        force_refresh=force_refresh
     )
     time_cfg = real_data.get("time_range_config", {})
-    metrics = mcp_get_standard_metrics("all")
     
-    filtered_rev = real_data.get("filtered_revenue", real_data["total_revenue_collected"])
-    filtered_tx = real_data.get("filtered_payments_count", real_data["total_payments_count"])
+    filtered_rev = real_data.get("filtered_revenue", real_data.get("total_revenue_collected", 0.0))
+    filtered_tx = real_data.get("filtered_payments_count", real_data.get("total_payments_count", 0))
+    all_time_rev = real_data.get("total_revenue_collected", 0.0)
+    all_time_tx = real_data.get("total_payments_count", 0)
     trend_badge = real_data.get("filtered_revenue_trend", "+18.4%")
 
     # Backend Pagination, Searching, and Sorting for Fleet Models
@@ -148,8 +151,42 @@ def home_view(request):
 
     # Live Payment Trends for the Home Dashboard Chart
     payment_trends = real_data.get("filtered_payment_trends") or real_data.get("monthly_payment_trends", [])
-    trend_labels = [p["short_month"] for p in payment_trends]
-    trend_values = [p["amount"] for p in payment_trends]
+    trend_labels = [p.get("short_month", "") for p in payment_trends]
+    trend_values = [p.get("amount", 0) for p in payment_trends]
+
+    metrics = {
+        "revenue": {
+            "title": "Total Revenue Collected",
+            "value": f"${all_time_rev:,.2f} USD",
+            "trend": trend_badge,
+            "transactions_count": all_time_tx,
+            "period": "YTD Live ERP Data"
+        },
+        "bookings": {
+            "title": "Active Vehicle Rentals & Drivers",
+            "value": f"{real_data.get('active_rentals', 0)} Active Rentals",
+            "total_drivers": real_data.get("total_drivers", 0),
+            "total_customers": real_data.get("total_customers", 0),
+            "period": "Current Active Fleet"
+        },
+        "fleet_utilization": {
+            "title": "Fleet Utilization Rate",
+            "value": f"{real_data.get('utilization_rate', 0.0)}%",
+            "total_vehicles": real_data.get("total_vehicles", 0),
+            "rented_vehicles": real_data.get("active_rentals", 0),
+            "available_vehicles": real_data.get("available_vehicles", 0),
+            "period": "Live Fleet Status"
+        },
+        "outstanding_payments": {
+            "title": "Total Outstanding & Overdue Payments",
+            "value": f"${real_data.get('total_balance_due', 0.0):,.2f} USD",
+            "total_invoiced": f"${real_data.get('total_amount_invoiced', 0.0):,.2f} USD",
+            "total_invoiced_paid": f"${real_data.get('total_amount_paid', 0.0):,.2f} USD",
+            "collection_rate": f"{real_data.get('invoice_collection_rate', 0.0)}%",
+            "pending_invoices_count": real_data.get("total_invoices", 0),
+            "currency": "USD ($)"
+        }
+    }
 
     context.update({
         "page_title": "Home - Arrendadora Ola Cars AI",
@@ -167,34 +204,34 @@ def home_view(request):
             "labels": trend_labels,
             "values": trend_values,
             "total": f"${filtered_rev:,.2f}",
-            "all_time_total": f"${real_data['total_revenue_collected']:,.2f}",
+            "all_time_total": f"${all_time_rev:,.2f}",
             "transactions": filtered_tx,
-            "all_time_transactions": real_data["total_payments_count"]
+            "all_time_transactions": all_time_tx
         },
         "kpis": {
             "total_revenue": {
                 "value": f"${filtered_rev:,.2f}",
                 "trend": trend_badge,
                 "sub": f"{filtered_tx:,} payments ({time_cfg.get('label_en', '30 Days')})",
-                "all_time_sub": f"All time: ${real_data['total_revenue_collected']:,.2f} (6,798 tx)",
+                "all_time_sub": f"All time: ${all_time_rev:,.2f} ({all_time_tx:,} tx)",
                 "is_positive": True
             },
             "active_vehicles": {
-                "value": f"{real_data['active_rentals']}",
-                "trend": f"{real_data['utilization_rate']}%",
-                "sub": f"of {real_data['total_vehicles']} total fleet",
+                "value": f"{real_data.get('active_rentals', 0)}",
+                "trend": f"{real_data.get('utilization_rate', 0.0)}%",
+                "sub": f"of {real_data.get('total_vehicles', 0)} total fleet",
                 "is_positive": True
             },
             "total_invoiced": {
-                "value": f"${real_data['total_amount_invoiced']:,.2f}",
-                "trend": f"{real_data['invoice_collection_rate']}%",
-                "sub": f"{real_data['total_invoices']} invoices (All-time: $15,959.68)",
+                "value": f"${real_data.get('total_amount_invoiced', 0.0):,.2f}",
+                "trend": f"{real_data.get('invoice_collection_rate', 0.0)}%",
+                "sub": f"{real_data.get('total_invoices', 0)} invoices (All-time: $15,959.68)",
                 "is_positive": True
             },
             "outstanding": {
-                "value": f"${real_data['total_balance_due']:,.2f}",
+                "value": f"${real_data.get('total_balance_due', 0.0):,.2f}",
                 "trend": "Active Period",
-                "sub": f"${real_data['total_amount_paid']:,.2f} collected (All-time overdue: $5,688.26)",
+                "sub": f"${real_data.get('total_amount_paid', 0.0):,.2f} collected (All-time overdue: $5,688.26)",
                 "is_positive": False
             },
         }
@@ -236,25 +273,29 @@ def analytics_view(request):
     time_range = request.GET.get("range", "30d")
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
+    force_refresh = request.GET.get("refresh") == "1"
 
     real_data = RealERPAnalytics.get_analytics_with_time_range(
         time_range=time_range,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        force_refresh=force_refresh
     )
     time_cfg = real_data.get("time_range_config", {})
 
     payment_trends = real_data.get("filtered_payment_trends") or real_data.get("monthly_payment_trends", [])
-    trend_labels = [p["short_month"] for p in payment_trends]
-    trend_values = [p["amount"] for p in payment_trends]
+    trend_labels = [p.get("short_month", "") for p in payment_trends]
+    trend_values = [p.get("amount", 0) for p in payment_trends]
 
     expenses_trends = real_data.get("expenses_overview", {}).get("monthly_expenses", [])
-    exp_labels = [e["month"] for e in expenses_trends]
-    exp_values = [e["amount"] for e in expenses_trends]
+    exp_labels = [e.get("month", "") for e in expenses_trends]
+    exp_values = [e.get("amount", 0) for e in expenses_trends]
 
     total_audit_interactions = AIAuditLog.objects.count()
-    filtered_rev = real_data.get("filtered_revenue", real_data["total_revenue_collected"])
-    filtered_tx = real_data.get("filtered_payments_count", real_data["total_payments_count"])
+    filtered_rev = real_data.get("filtered_revenue", real_data.get("total_revenue_collected", 0.0))
+    filtered_tx = real_data.get("filtered_payments_count", real_data.get("total_payments_count", 0))
+    all_time_rev = real_data.get("total_revenue_collected", 0.0)
+    all_time_tx = real_data.get("total_payments_count", 0)
 
     # Backend Pagination for Analytics Tables
     models_paginated = RealERPAnalytics.paginate_dataset(
@@ -322,25 +363,25 @@ def analytics_view(request):
             "labels": trend_labels,
             "values": trend_values,
             "total": f"${filtered_rev:,.2f}",
-            "all_time_total": f"${real_data['total_revenue_collected']:,.2f}",
+            "all_time_total": f"${all_time_rev:,.2f}",
             "trend": real_data.get("filtered_revenue_trend", "+18.4%"),
             "transactions": filtered_tx,
-            "all_time_transactions": real_data["total_payments_count"]
+            "all_time_transactions": all_time_tx
         },
         "fleet_distribution": {
-            "total": real_data["total_vehicles"],
-            "rented": real_data["active_rentals"],
-            "available": real_data["available_vehicles"],
-            "utilization": real_data["utilization_rate"],
+            "total": real_data.get("total_vehicles", 0),
+            "rented": real_data.get("active_rentals", 0),
+            "available": real_data.get("available_vehicles", 0),
+            "utilization": real_data.get("utilization_rate", 0.0),
             "statuses": real_data.get("vehicle_statuses", []),
             "top_models": real_data.get("top_vehicle_models", [])
         },
         "invoice_generation": {
-            "total_count": real_data["total_invoices"],
-            "total_billed": f"${real_data['total_amount_invoiced']:,.2f}",
-            "total_paid": f"${real_data['total_amount_paid']:,.2f}",
-            "total_balance": f"${real_data['total_balance_due']:,.2f}",
-            "collection_rate": f"{real_data['invoice_collection_rate']}%",
+            "total_count": real_data.get("total_invoices", 0),
+            "total_billed": f"${real_data.get('total_amount_invoiced', 0.0):,.2f}",
+            "total_paid": f"${real_data.get('total_amount_paid', 0.0):,.2f}",
+            "total_balance": f"${real_data.get('total_balance_due', 0.0):,.2f}",
+            "collection_rate": f"{real_data.get('invoice_collection_rate', 0.0)}%",
             "statuses": real_data.get("invoice_statuses", [])
         },
         "bills_overview": real_data.get("bills_overview", {}),
